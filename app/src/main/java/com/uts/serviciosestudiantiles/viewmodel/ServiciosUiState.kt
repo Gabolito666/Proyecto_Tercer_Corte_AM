@@ -17,6 +17,8 @@ data class ServiciosUiState(
     val puedeLiquidar: Boolean = false,
     val listaLiquidaciones: List<LiquidacionMatricula> = emptyList(),
     val totalAcumulado: Double = 0.0,
+    val mensajeMensajeEstado: String? = null,
+    val esUsuarioExistente: Boolean = false,
     val cursosDisponibles: Map<String, Double> = mapOf(
         "Inglés Técnico" to 300000.0,
         "Programación Web" to 450000.0,
@@ -26,4 +28,6 @@ data class ServiciosUiState(
         "Marketing Digital y Analítica" to 320000.0,
         "Ciencia de Datos con Python" to 480000.0
     )
-)
+) {
+    val mensajeEstado: String? get() = mensajeMensajeEstado
+}

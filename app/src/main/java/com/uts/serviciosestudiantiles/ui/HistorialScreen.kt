@@ -62,6 +62,11 @@ fun HistorialScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // Garantizar que al abrir la pestaña o cambiar de perfil se actualice leyendo la persistencia local
+    androidx.compose.runtime.LaunchedEffect(state.perfilGuardado?.codigo) {
+        viewModel.actualizarHistorialPorEstudiante()
+    }
+
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-CO")).apply {
         maximumFractionDigits = 0
     }

@@ -60,7 +60,11 @@ private data class TabItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainTabScreen(
-    viewModel: ServiciosViewModel = viewModel(),
+    viewModel: ServiciosViewModel = run {
+        val context = androidx.compose.ui.platform.LocalContext.current.applicationContext
+        com.uts.serviciosestudiantiles.data.ServiciosRepository.globalContext = context
+        viewModel()
+    },
     modifier: Modifier = Modifier
 ) {
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }

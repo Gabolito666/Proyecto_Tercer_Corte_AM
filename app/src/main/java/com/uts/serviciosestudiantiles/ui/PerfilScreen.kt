@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -127,6 +128,73 @@ fun PerfilScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = GrisTextoSecundario
                 )
+            }
+
+            // Indicador visual de estado de persistencia y sesión (mensajeMensajeEstado)
+            AnimatedVisibility(
+                visible = state.mensajeMensajeEstado != null,
+                enter = fadeIn() + slideInVertically()
+            ) {
+                state.mensajeMensajeEstado?.let { mensaje ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
+                        border = BorderStroke(
+                            width = 1.5.dp,
+                            color = if (state.esUsuarioExistente) VerdeOpalo else VinoTintoOleo
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = if (state.esUsuarioExistente) VerdeOpaloClaro else CremaFondo,
+                                modifier = Modifier.size(38.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = if (state.esUsuarioExistente) Icons.Default.Verified else Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = if (state.esUsuarioExistente) VinoTintoOleo else VerdeOpalo,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = if (state.esUsuarioExistente) "Estudiante Existente Cargado" else "Registro Local Exitoso",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (state.esUsuarioExistente) VinoTintoOleo else NegroTexto
+                                )
+                                Text(
+                                    text = mensaje,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = NegroTexto
+                                )
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = if (state.esUsuarioExistente) VerdeOpalo else VinoTintoOleo
+                            ) {
+                                Text(
+                                    text = if (state.esUsuarioExistente) "Cargado" else "Nuevo",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (state.esUsuarioExistente) NegroTexto else BlancoSuperficie,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             // Tarjeta limpia de fondo blanco sobre CremaFondo para el Formulario
@@ -317,7 +385,6 @@ fun PerfilScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                // Ícono indicador estilizado con VerdeOpalo
                                 Surface(
                                     shape = CircleShape,
                                     color = VerdeOpaloClaro,
@@ -433,7 +500,7 @@ fun PerfilScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Perfil activo • Matrícula habilitada",
+                                    text = if (state.esUsuarioExistente) "Perfil Restaurado • Matrícula Habilitada" else "Perfil Activo • Matrícula Habilitada",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = NegroTexto
