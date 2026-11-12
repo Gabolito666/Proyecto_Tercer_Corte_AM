@@ -13,16 +13,25 @@ class ServiciosViewModel(
     private val repository: ServiciosRepository = ServiciosRepository()
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ServiciosUiState())
-    val uiState: StateFlow<ServiciosUiState> = _uiState.asStateFlow()
-
     val facultades: List<String> = listOf("Ingenierías", "Ciencias Socioeconómicas")
 
     val cursosConCostos: Map<String, Double> = mapOf(
         "Inglés Técnico" to 300000.0,
         "Programación Web" to 450000.0,
-        "Ciberseguridad" to 500000.0
+        "Ciberseguridad" to 500000.0,
+        "Diseño UX UI Avanzado" to 380000.0,
+        "Inteligencia Artificial Aplicada" to 550000.0,
+        "Marketing Digital y Analítica" to 320000.0,
+        "Ciencia de Datos con Python" to 480000.0
     )
+
+    private val _uiState = MutableStateFlow(
+        ServiciosUiState(
+            cursoSeleccionado = "Inglés Técnico",
+            cursosDisponibles = cursosConCostos
+        )
+    )
+    val uiState: StateFlow<ServiciosUiState> = _uiState.asStateFlow()
 
     // Funciones de Módulo 1 (Gestión de Perfil)
     fun onNombreCambiado(nombre: String) {

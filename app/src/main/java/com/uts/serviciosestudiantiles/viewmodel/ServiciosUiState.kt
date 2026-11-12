@@ -16,5 +16,14 @@ data class ServiciosUiState(
     val tieneIcetex: Boolean = false,
     val puedeLiquidar: Boolean = false,
     val listaLiquidaciones: List<LiquidacionMatricula> = emptyList(),
-    val totalAcumulado: Double = 0.0
+    val totalAcumulado: Double = 0.0,
+    val cursosDisponibles: Map<String, Double> = mapOf(
+        "Inglés Técnico" to 300000.0,
+        "Programación Web" to 450000.0,
+        "Ciberseguridad" to 500000.0,
+        "Diseño UX UI Avanzado" to 380000.0,
+        "Inteligencia Artificial Aplicada" to 550000.0,
+        "Marketing Digital y Analítica" to 320000.0,
+        "Ciencia de Datos con Python" to 480000.0
+    )
 )

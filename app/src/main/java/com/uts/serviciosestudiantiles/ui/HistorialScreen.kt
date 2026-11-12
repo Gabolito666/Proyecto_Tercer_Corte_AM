@@ -1,5 +1,7 @@
 package com.uts.serviciosestudiantiles.ui
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
@@ -21,14 +24,12 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,8 +38,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uts.serviciosestudiantiles.data.LiquidacionMatricula
+import com.uts.serviciosestudiantiles.ui.theme.BlancoSuperficie
+import com.uts.serviciosestudiantiles.ui.theme.CremaFondo
+import com.uts.serviciosestudiantiles.ui.theme.GrisPlata
+import com.uts.serviciosestudiantiles.ui.theme.GrisTextoSecundario
+import com.uts.serviciosestudiantiles.ui.theme.MagentaOleo
+import com.uts.serviciosestudiantiles.ui.theme.MagentaOleoClaro
+import com.uts.serviciosestudiantiles.ui.theme.NegroTexto
+import com.uts.serviciosestudiantiles.ui.theme.VerdeOpalo
+import com.uts.serviciosestudiantiles.ui.theme.VerdeOpaloClaro
+import com.uts.serviciosestudiantiles.ui.theme.VinoTintoOleo
+import com.uts.serviciosestudiantiles.ui.theme.VinoTintoOscuro
 import com.uts.serviciosestudiantiles.viewmodel.ServiciosViewModel
 import java.text.NumberFormat
 import java.util.Locale
@@ -54,142 +67,219 @@ fun HistorialScreen(
         maximumFractionDigits = 0
     }
 
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .background(CremaFondo)
     ) {
-        // Encabezado del Módulo con Total Acumulado Financiero Destacado
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            ),
-            shape = RoundedCornerShape(18.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Encabezado de sección
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountBalanceWallet,
-                        contentDescription = null,
-                        modifier = Modifier.size(28.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Total Acumulado Financiero",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
                 Text(
-                    text = currencyFormat.format(state.totalAcumulado),
+                    text = "Módulo 3",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = VinoTintoOleo,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    text = "Historial Financiero",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "${state.listaLiquidaciones.size} liquidaciones registradas",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    color = NegroTexto
                 )
             }
-        }
 
-        // Título de la sección de liquidaciones
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Detalle de Liquidaciones",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Icon(
-                imageVector = Icons.Default.History,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline
-            )
-        }
-
-        // Listado de liquidaciones o estado vacío
-        if (state.listaLiquidaciones.isEmpty()) {
-            OutlinedCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.outlinedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+            // Tarjeta superior prominente estilo Nubank en VinoTintoOleo con acentos en VerdeOpalo
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = VinoTintoOleo),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
-                Box(
+                Column(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .padding(24.dp),
-                    contentAlignment = Alignment.Center
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                shape = CircleShape,
+                                color = BlancoSuperficie.copy(alpha = 0.15f),
+                                modifier = Modifier.size(38.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.AccountBalanceWallet,
+                                        contentDescription = null,
+                                        tint = VerdeOpalo,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Total Acumulado Financiero",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = BlancoSuperficie.copy(alpha = 0.9f)
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = BlancoSuperficie.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "UTS Pay",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = VerdeOpalo,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+
+                    // Acento en VerdeOpalo para el total acumulado
+                    Text(
+                        text = currencyFormat.format(state.totalAcumulado),
+                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
+                        fontWeight = FontWeight.ExtraBold,
+                        color = VerdeOpalo
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = "No hay liquidaciones registradas",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            text = "Liquidaciones acumuladas en el período",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = BlancoSuperficie.copy(alpha = 0.75f)
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "Guarda tu perfil y liquida cursos en la pestaña '2. Matrícula' para ver tu historial.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = VerdeOpalo
+                        ) {
+                            Text(
+                                text = "${state.listaLiquidaciones.size} reg.",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = VinoTintoOscuro,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
                     }
                 }
             }
-        } else {
-            LazyColumn(
+
+            // Título de la sección de liquidaciones
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                items(
-                    items = state.listaLiquidaciones,
-                    key = { it.id }
-                ) { liquidacion ->
-                    LiquidacionCard(
-                        liquidacion = liquidacion,
-                        currencyFormat = currencyFormat
-                    )
+                Text(
+                    text = "Movimientos Registrados",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = NegroTexto
+                )
+                Icon(
+                    imageVector = Icons.Default.History,
+                    contentDescription = null,
+                    tint = GrisTextoSecundario,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // LazyColumn con tarjetas individuales estilo Nubank
+            if (state.listaLiquidaciones.isEmpty()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
+                    border = BorderStroke(1.dp, GrisPlata),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(28.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = CremaFondo,
+                                modifier = Modifier.size(64.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(32.dp),
+                                        tint = GrisTextoSecundario
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Sin liquidaciones todavía",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = NegroTexto
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Guarda tu perfil y liquida cursos libres en la pestaña '2. Matrícula' para visualizar los comprobantes aquí.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = GrisTextoSecundario,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    contentPadding = PaddingValues(bottom = 20.dp)
+                ) {
+                    items(
+                        items = state.listaLiquidaciones,
+                        key = { it.id }
+                    ) { liquidacion ->
+                        LiquidacionItemCard(
+                            liquidacion = liquidacion,
+                            currencyFormat = currencyFormat
+                        )
+                    }
                 }
             }
         }
@@ -197,24 +287,23 @@ fun HistorialScreen(
 }
 
 @Composable
-private fun LiquidacionCard(
+private fun LiquidacionItemCard(
     liquidacion: LiquidacionMatricula,
     currencyFormat: NumberFormat,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
+        border = BorderStroke(1.dp, GrisPlata),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -225,92 +314,158 @@ private fun LiquidacionCard(
                     text = liquidacion.cursoLibre,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = NegroTexto
                 )
-                Text(
-                    text = "#${liquidacion.id}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.outline
-                )
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = CremaFondo,
+                    border = BorderStroke(1.dp, GrisPlata)
+                ) {
+                    Text(
+                        text = "ID #${liquidacion.id}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = GrisTextoSecundario,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
             }
 
             Text(
-                text = "Costo base: ${currencyFormat.format(liquidacion.costoBase)}",
+                text = "Tarifa base: ${currencyFormat.format(liquidacion.costoBase)}",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                color = GrisTextoSecundario
             )
 
-            // Desglose de Beneficios / Recargos
+            // Etiquetas tipo píldora (VerdeOpalo para Beca, MagentaOleo para Icetex)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                AssistChip(
-                    onClick = {},
-                    label = {
-                        Text(
-                            text = if (liquidacion.tieneBeca) "Beca: 50% desc." else "Sin Beca",
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = if (liquidacion.tieneBeca) Icons.Default.Check else Icons.Default.Close,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    },
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor = if (liquidacion.tieneBeca) {
-                            MaterialTheme.colorScheme.primaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.surfaceContainer
+                // Etiqueta píldora para Beca
+                if (liquidacion.tieneBeca) {
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = VerdeOpaloClaro,
+                        border = BorderStroke(1.dp, VerdeOpalo)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = NegroTexto,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Beca: 50% desc.",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = NegroTexto
+                            )
                         }
-                    )
-                )
+                    }
+                } else {
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = CremaFondo,
+                        border = BorderStroke(1.dp, GrisPlata)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = null,
+                                tint = GrisTextoSecundario,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Sin Beca",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = GrisTextoSecundario
+                            )
+                        }
+                    }
+                }
 
-                AssistChip(
-                    onClick = {},
-                    label = {
-                        Text(
-                            text = if (liquidacion.tieneIcetex) "Icetex: +5%" else "Sin Icetex",
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = if (liquidacion.tieneIcetex) Icons.Default.Check else Icons.Default.Close,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    },
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor = if (liquidacion.tieneIcetex) {
-                            MaterialTheme.colorScheme.errorContainer
-                        } else {
-                            MaterialTheme.colorScheme.surfaceContainer
+                // Etiqueta píldora para Icetex
+                if (liquidacion.tieneIcetex) {
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = MagentaOleo,
+                        border = BorderStroke(1.dp, MagentaOleo)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = BlancoSuperficie,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Icetex: +5%",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = BlancoSuperficie
+                            )
                         }
-                    )
-                )
+                    }
+                } else {
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = CremaFondo,
+                        border = BorderStroke(1.dp, GrisPlata)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = null,
+                                tint = GrisTextoSecundario,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Sin Icetex",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = GrisTextoSecundario
+                            )
+                        }
+                    }
+                }
             }
 
-            HorizontalDivider()
+            HorizontalDivider(color = GrisPlata, thickness = 1.dp)
 
+            // Costo en tipografía destacada
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Total a Pagar:",
+                    text = "Total Liquidado:",
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = NegroTexto
                 )
                 Text(
                     text = currencyFormat.format(liquidacion.totalAPagar),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = VinoTintoOleo
                 )
             }
         }

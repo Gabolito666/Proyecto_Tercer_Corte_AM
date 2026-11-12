@@ -3,7 +3,10 @@ package com.uts.serviciosestudiantiles.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,16 +17,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -33,10 +38,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,7 +53,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.uts.serviciosestudiantiles.ui.theme.BlancoSuperficie
+import com.uts.serviciosestudiantiles.ui.theme.CremaFondo
+import com.uts.serviciosestudiantiles.ui.theme.GrisPlata
+import com.uts.serviciosestudiantiles.ui.theme.GrisPlataMate
+import com.uts.serviciosestudiantiles.ui.theme.GrisTextoSecundario
+import com.uts.serviciosestudiantiles.ui.theme.NegroTexto
+import com.uts.serviciosestudiantiles.ui.theme.VerdeOpalo
+import com.uts.serviciosestudiantiles.ui.theme.VerdeOpaloClaro
+import com.uts.serviciosestudiantiles.ui.theme.VinoTintoOleo
 import com.uts.serviciosestudiantiles.viewmodel.ServiciosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,217 +75,372 @@ fun PerfilScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
 
-    Column(
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = VinoTintoOleo,
+        unfocusedBorderColor = GrisPlata,
+        focusedLabelColor = VinoTintoOleo,
+        unfocusedLabelColor = GrisTextoSecundario,
+        cursorColor = VinoTintoOleo,
+        focusedLeadingIconColor = VinoTintoOleo,
+        unfocusedLeadingIconColor = GrisTextoSecundario,
+        focusedTrailingIconColor = VinoTintoOleo,
+        unfocusedTrailingIconColor = GrisTextoSecundario,
+        focusedContainerColor = BlancoSuperficie,
+        unfocusedContainerColor = BlancoSuperficie,
+        focusedTextColor = NegroTexto,
+        unfocusedTextColor = NegroTexto
+    )
+
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .background(CremaFondo)
     ) {
-        // Encabezado del Módulo
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            ),
-            shape = RoundedCornerShape(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            Row(
+            // Encabezado de sección estilo Nubank
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 4.dp, vertical = 4.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                Text(
+                    text = "Módulo 1",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = VinoTintoOleo,
+                    letterSpacing = 1.sp
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = "Módulo 1: Gestión de Perfil",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        text = "Ingresa tus datos para habilitar los servicios UTS",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                    )
-                }
+                Text(
+                    text = "Gestión de Perfil",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = NegroTexto
+                )
+                Text(
+                    text = "Configura tus datos para acceder a los servicios de matrícula UTS.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = GrisTextoSecundario
+                )
             }
-        }
 
-        // Campo 1: Nombre Completo
-        OutlinedTextField(
-            value = state.campoNombre,
-            onValueChange = { viewModel.onNombreCambiado(it) },
-            label = { Text("Nombre Completo") },
-            placeholder = { Text("Ej. Gabriel Prado") },
-            leadingIcon = {
-                Icon(imageVector = Icons.Default.Person, contentDescription = null)
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Words,
-                keyboardType = KeyboardType.Text
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        )
-
-        // Campo 2: Código Estudiantil
-        OutlinedTextField(
-            value = state.campoCodigo,
-            onValueChange = { viewModel.onCodigoCambiado(it) },
-            label = { Text("Código Estudiantil") },
-            placeholder = { Text("Ej. 1098765432") },
-            leadingIcon = {
-                Icon(imageVector = Icons.Default.Badge, contentDescription = null)
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        )
-
-        // Selector: Facultad (ExposedDropdownMenuBox)
-        ExposedDropdownMenuBox(
-            expanded = state.menuFacultadAbierto,
-            onExpandedChange = { viewModel.toggleMenuFacultad(it) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            OutlinedTextField(
-                value = state.facultadSeleccionada,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Facultad") },
-                leadingIcon = {
-                    Icon(imageVector = Icons.Default.School, contentDescription = null)
-                },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = state.menuFacultadAbierto)
-                },
-                colors = OutlinedTextFieldDefaults.colors(),
-                modifier = Modifier
-                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true)
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            ExposedDropdownMenu(
-                expanded = state.menuFacultadAbierto,
-                onDismissRequest = { viewModel.toggleMenuFacultad(false) }
-            ) {
-                viewModel.facultades.forEach { facultad ->
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = facultad,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        },
-                        onClick = {
-                            viewModel.onFacultadSeleccionada(facultad)
-                        }
-                    )
-                }
-            }
-        }
-
-        // Botón: Guardar Perfil
-        Button(
-            onClick = { viewModel.guardarPerfil() },
-            enabled = state.campoNombre.isNotBlank() && state.campoCodigo.isNotBlank(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(12.dp),
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Guardar Perfil",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        // Contenedor / Card de Correo Institucional Generado
-        AnimatedVisibility(
-            visible = state.perfilGuardado != null || state.correoSimulado.isNotEmpty(),
-            enter = fadeIn() + slideInVertically()
-        ) {
+            // Tarjeta limpia de fondo blanco sobre CremaFondo para el Formulario
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                ),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
+                border = BorderStroke(1.dp, GrisPlata),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = CremaFondo,
+                            modifier = Modifier.size(42.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = VinoTintoOleo,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Datos del Estudiante",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = NegroTexto
+                            )
+                            Text(
+                                text = "Información requerida para la matrícula",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GrisTextoSecundario
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(color = GrisPlata, thickness = 1.dp)
+
+                    // Campo 1: Nombre Completo
+                    OutlinedTextField(
+                        value = state.campoNombre,
+                        onValueChange = { viewModel.onNombreCambiado(it) },
+                        label = { Text("Nombre Completo") },
+                        placeholder = { Text("Ej. Gabriel Prado") },
+                        leadingIcon = {
+                            Icon(imageVector = Icons.Default.Person, contentDescription = null)
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            keyboardType = KeyboardType.Text
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = textFieldColors
+                    )
+
+                    // Campo 2: Código Estudiantil
+                    OutlinedTextField(
+                        value = state.campoCodigo,
+                        onValueChange = { viewModel.onCodigoCambiado(it) },
+                        label = { Text("Código Estudiantil") },
+                        placeholder = { Text("Ej. 1098765432") },
+                        leadingIcon = {
+                            Icon(imageVector = Icons.Default.Badge, contentDescription = null)
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = textFieldColors
+                    )
+
+                    // Selector: Facultad
+                    ExposedDropdownMenuBox(
+                        expanded = state.menuFacultadAbierto,
+                        onExpandedChange = { viewModel.toggleMenuFacultad(it) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = state.facultadSeleccionada,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Facultad") },
+                            leadingIcon = {
+                                Icon(imageVector = Icons.Default.School, contentDescription = null)
+                            },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = state.menuFacultadAbierto)
+                            },
+                            modifier = Modifier
+                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true)
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = textFieldColors
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = state.menuFacultadAbierto,
+                            onDismissRequest = { viewModel.toggleMenuFacultad(false) },
+                            modifier = Modifier.background(BlancoSuperficie)
+                        ) {
+                            viewModel.facultades.forEach { facultad ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = facultad,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = NegroTexto
+                                        )
+                                    },
+                                    onClick = {
+                                        viewModel.onFacultadSeleccionada(facultad)
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Botón "Guardar Perfil" tipo píldora (RoundedCornerShape 50%) en VinoTintoOleo con texto blanco
+                    val isFormValid = state.campoNombre.isNotBlank() && state.campoCodigo.isNotBlank()
+                    Button(
+                        onClick = { viewModel.guardarPerfil() },
+                        enabled = isFormValid,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = VinoTintoOleo,
+                            contentColor = BlancoSuperficie,
+                            disabledContainerColor = GrisPlataMate,
+                            disabledContentColor = GrisTextoSecundario
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.Email,
+                            imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Correo Institucional Generado",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                            text = "Guardar Perfil",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
                         )
                     }
+                }
+            }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+            // Correo institucional generado: tarjeta destacada con borde VerdeOpalo e ícono indicador
+            AnimatedVisibility(
+                visible = state.perfilGuardado != null || state.correoSimulado.isNotEmpty(),
+                enter = fadeIn() + slideInVertically()
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
+                    border = BorderStroke(2.dp, VerdeOpalo),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                // Ícono indicador estilizado con VerdeOpalo
+                                Surface(
+                                    shape = CircleShape,
+                                    color = VerdeOpaloClaro,
+                                    modifier = Modifier.size(42.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.VerifiedUser,
+                                            contentDescription = "Indicador de verificación",
+                                            tint = VinoTintoOleo,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Correo Institucional Generado",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = NegroTexto
+                                    )
+                                    Text(
+                                        text = "Cuenta asignada por el sistema UTS",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GrisTextoSecundario
+                                    )
+                                }
+                            }
+                        }
 
-                    Text(
-                        text = state.correoSimulado,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                        // Caja destacada de correo institucional
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = CremaFondo,
+                            border = BorderStroke(1.dp, GrisPlata),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Email,
+                                    contentDescription = null,
+                                    tint = VinoTintoOleo,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = state.correoSimulado,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = VinoTintoOleo
+                                )
+                            }
+                        }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                        // Resumen del estudiante registrado
+                        state.perfilGuardado?.let { perfil ->
+                            HorizontalDivider(color = GrisPlata, thickness = 1.dp)
 
-                    state.perfilGuardado?.let { perfil ->
-                        Text(
-                            text = "Estudiante: ${perfil.nombre}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                        Text(
-                            text = "Código: ${perfil.codigo}  •  Facultad: ${perfil.facultad}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
-                        )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Estudiante",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = GrisTextoSecundario
+                                    )
+                                    Text(
+                                        text = perfil.nombre,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = NegroTexto
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "Código / Facultad",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = GrisTextoSecundario
+                                    )
+                                    Text(
+                                        text = "${perfil.codigo} • ${perfil.facultad}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = NegroTexto
+                                    )
+                                }
+                            }
+                        }
+
+                        // Etiqueta tipo píldora de confirmación
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = VerdeOpaloClaro,
+                            border = BorderStroke(1.dp, VerdeOpalo.copy(alpha = 0.5f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = NegroTexto,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Perfil activo • Matrícula habilitada",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = NegroTexto
+                                )
+                            }
+                        }
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "✓ Perfil activo. Módulo de liquidación de matrícula habilitado.",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
                 }
             }
         }
