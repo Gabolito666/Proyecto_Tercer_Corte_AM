@@ -4,9 +4,8 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 
-// Configuración de constantes para Supabase
-const val SUPABASE_URL = "https://tu-proyecto.supabase.co"
-const val SUPABASE_ANON_KEY = "tu-supabase-anon-key"
+val SUPABASE_URL = "https://tu-proyecto.supabase.co"
+val SUPABASE_ANON_KEY = "TU_ANON_KEY_AQUI"
 
 val supabaseClient: SupabaseClient = createSupabaseClient(
     supabaseUrl = SUPABASE_URL,

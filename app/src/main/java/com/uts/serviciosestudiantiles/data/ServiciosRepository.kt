@@ -32,19 +32,21 @@ class ServiciosRepository(
         }.getOrNull() ?: perfil?.takeIf { it.codigo == codigo }
     }
 
-    suspend fun agregarLiquidacion(liquidacion: LiquidacionMatricula) = withContext(Dispatchers.IO) {
+    suspend fun guardarLiquidacion(liquidacion: LiquidacionMatricula) = withContext(Dispatchers.IO) {
         liquidaciones.add(liquidacion)
         runCatching {
             client.from("liquidaciones").insert(liquidacion)
         }.getOrThrow()
     }
 
+    suspend fun agregarLiquidacion(liquidacion: LiquidacionMatricula) = guardarLiquidacion(liquidacion)
+
     suspend fun obtenerLiquidacionesPorCodigo(codigo: String): List<LiquidacionMatricula> = withContext(Dispatchers.IO) {
         runCatching {
             client.from("liquidaciones")
                 .select {
                     filter {
-                        eq("codigoEstudiante", codigo)
+                        eq("codigo_estudiante", codigo)
                     }
                 }
                 .decodeList<LiquidacionMatricula>()

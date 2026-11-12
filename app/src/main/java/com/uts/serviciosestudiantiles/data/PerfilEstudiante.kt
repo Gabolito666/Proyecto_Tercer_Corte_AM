@@ -9,5 +9,5 @@ data class PerfilEstudiante(
     @SerialName("nombre") val nombre: String = "",
     @SerialName("codigo") val codigo: String = "",
     @SerialName("facultad") val facultad: String = "",
-    @SerialName("correoInstitucional") val correoInstitucional: String = ""
+    @SerialName("correo_institucional") val correoInstitucional: String = ""
 )

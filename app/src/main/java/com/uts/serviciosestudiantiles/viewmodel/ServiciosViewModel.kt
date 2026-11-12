@@ -161,7 +161,7 @@ class ServiciosViewModel(
 
         viewModelScope.launch {
             runCatching {
-                repository.agregarLiquidacion(nuevaLiquidacion)
+                repository.guardarLiquidacion(nuevaLiquidacion)
             }
 
             val listaActualizada = runCatching {
