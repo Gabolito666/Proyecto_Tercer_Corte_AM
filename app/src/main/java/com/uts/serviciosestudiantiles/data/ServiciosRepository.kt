@@ -1,22 +1,59 @@
 package com.uts.serviciosestudiantiles.data
 
-class ServiciosRepository {
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+class ServiciosRepository(
+    private val client: SupabaseClient = supabaseClient
+) {
     private var perfil: PerfilEstudiante? = null
     private val liquidaciones: MutableList<LiquidacionMatricula> = mutableListOf()
 
-    fun guardarPerfil(perfil: PerfilEstudiante) {
-        this.perfil = perfil
+    suspend fun guardarPerfil(perfil: PerfilEstudiante) = withContext(Dispatchers.IO) {
+        this@ServiciosRepository.perfil = perfil
+        runCatching {
+            client.from("perfiles").upsert(perfil) {
+                onConflict = "codigo"
+            }
+        }.getOrThrow()
     }
 
-    fun obtenerPerfil(): PerfilEstudiante? {
-        return perfil
+    suspend fun buscarPerfilPorCodigo(codigo: String): PerfilEstudiante? = withContext(Dispatchers.IO) {
+        runCatching {
+            client.from("perfiles")
+                .select {
+                    filter {
+                        eq("codigo", codigo)
+                    }
+                }
+                .decodeSingleOrNull<PerfilEstudiante>()
+        }.getOrNull() ?: perfil?.takeIf { it.codigo == codigo }
     }
 
-    fun agregarLiquidacion(liquidacion: LiquidacionMatricula) {
+    suspend fun agregarLiquidacion(liquidacion: LiquidacionMatricula) = withContext(Dispatchers.IO) {
         liquidaciones.add(liquidacion)
+        runCatching {
+            client.from("liquidaciones").insert(liquidacion)
+        }.getOrThrow()
     }
 
-    fun obtenerLiquidaciones(): List<LiquidacionMatricula> {
-        return liquidaciones.toList()
+    suspend fun obtenerLiquidacionesPorCodigo(codigo: String): List<LiquidacionMatricula> = withContext(Dispatchers.IO) {
+        runCatching {
+            client.from("liquidaciones")
+                .select {
+                    filter {
+                        eq("codigoEstudiante", codigo)
+                    }
+                }
+                .decodeList<LiquidacionMatricula>()
+        }.getOrElse {
+            liquidaciones.filter { it.codigoEstudiante == codigo || codigo.isEmpty() }
+        }
     }
+
+    fun obtenerPerfil(): PerfilEstudiante? = perfil
+
+    fun obtenerLiquidaciones(): List<LiquidacionMatricula> = liquidaciones.toList()
 }

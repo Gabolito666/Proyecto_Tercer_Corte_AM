@@ -1,9 +1,13 @@
 package com.uts.serviciosestudiantiles.data
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class PerfilEstudiante(
-    val id: Int,
-    val nombre: String,
-    val codigo: String,
-    val facultad: String,
-    val correoInstitucional: String
+    @SerialName("id") val id: Int = 1,
+    @SerialName("nombre") val nombre: String = "",
+    @SerialName("codigo") val codigo: String = "",
+    @SerialName("facultad") val facultad: String = "",
+    @SerialName("correoInstitucional") val correoInstitucional: String = ""
 )
