@@ -19,4 +19,8 @@ class ServiciosRepository {
     fun obtenerLiquidaciones(): List<LiquidacionMatricula> {
         return liquidaciones.toList()
     }
+
+    fun obtenerLiquidacionesPorEstudiante(codigo: String): List<LiquidacionMatricula> {
+        return liquidaciones.filter { it.codigoEstudiante == codigo }
+    }
 }

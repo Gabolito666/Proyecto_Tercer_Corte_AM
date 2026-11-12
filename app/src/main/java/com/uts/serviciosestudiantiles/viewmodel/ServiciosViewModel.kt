@@ -82,6 +82,8 @@ class ServiciosViewModel(
                     puedeLiquidar = true
                 )
             }
+
+            actualizarHistorialPorEstudiante(nuevoPerfil.codigo)
         }
     }
 
@@ -109,7 +111,8 @@ class ServiciosViewModel(
 
     fun liquidarMatricula() {
         val currentState = _uiState.value
-        if (!currentState.puedeLiquidar || currentState.perfilGuardado == null) {
+        val perfilActual = currentState.perfilGuardado ?: return
+        if (!currentState.puedeLiquidar) {
             return
         }
 
@@ -123,6 +126,7 @@ class ServiciosViewModel(
 
         val nuevaLiquidacion = LiquidacionMatricula(
             id = nuevoId,
+            codigoEstudiante = perfilActual.codigo,
             cursoLibre = currentState.cursoSeleccionado,
             costoBase = costoBase,
             tieneBeca = currentState.tieneBeca,
@@ -131,15 +135,29 @@ class ServiciosViewModel(
         )
 
         repository.agregarLiquidacion(nuevaLiquidacion)
-        val listaActualizada = repository.obtenerLiquidaciones()
-        val nuevoTotalAcumulado = listaActualizada.sumOf { it.totalAPagar }
 
         _uiState.update {
             it.copy(
-                listaLiquidaciones = listaActualizada,
-                totalAcumulado = nuevoTotalAcumulado,
                 tieneBeca = false,
                 tieneIcetex = false
+            )
+        }
+
+        actualizarHistorialPorEstudiante(perfilActual.codigo)
+    }
+
+    fun actualizarHistorialPorEstudiante(codigoEstudiante: String? = _uiState.value.perfilGuardado?.codigo) {
+        val liquidacionesFiltradas = if (codigoEstudiante.isNullOrBlank()) {
+            emptyList()
+        } else {
+            repository.obtenerLiquidacionesPorEstudiante(codigoEstudiante)
+        }
+        val nuevoTotal = liquidacionesFiltradas.sumOf { it.totalAPagar }
+
+        _uiState.update {
+            it.copy(
+                listaLiquidaciones = liquidacionesFiltradas,
+                totalAcumulado = nuevoTotal
             )
         }
     }

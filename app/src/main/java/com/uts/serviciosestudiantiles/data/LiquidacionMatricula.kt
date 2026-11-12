@@ -2,6 +2,7 @@ package com.uts.serviciosestudiantiles.data
 
 data class LiquidacionMatricula(
     val id: Int,
+    val codigoEstudiante: String,
     val cursoLibre: String,
     val costoBase: Double,
     val tieneBeca: Boolean,

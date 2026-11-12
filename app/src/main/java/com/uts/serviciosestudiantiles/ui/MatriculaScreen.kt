@@ -273,28 +273,40 @@ fun MatriculaScreen(
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Column {
+                                            Column(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .padding(end = 12.dp)
+                                            ) {
                                                 Text(
                                                     text = curso,
                                                     style = MaterialTheme.typography.bodyLarge,
                                                     fontWeight = if (curso == state.cursoSeleccionado) FontWeight.Bold else FontWeight.Medium,
                                                     color = NegroTexto
                                                 )
+                                                Spacer(modifier = Modifier.height(2.dp))
                                                 Text(
-                                                    text = "Tarifa base institucional",
+                                                    text = "Tarifa base: ${currencyFormat.format(costo)}",
                                                     style = MaterialTheme.typography.bodySmall,
-                                                    color = GrisTextoSecundario
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = VinoTintoOleo
                                                 )
                                             }
                                             Surface(
                                                 shape = RoundedCornerShape(50),
-                                                color = if (curso == state.cursoSeleccionado) VerdeOpaloClaro else CremaFondo
+                                                color = if (curso == state.cursoSeleccionado) VerdeOpaloClaro else CremaFondo,
+                                                border = BorderStroke(
+                                                    1.dp,
+                                                    if (curso == state.cursoSeleccionado) VerdeOpalo else GrisPlata
+                                                )
                                             ) {
                                                 Text(
                                                     text = currencyFormat.format(costo),
                                                     style = MaterialTheme.typography.labelMedium,
                                                     fontWeight = FontWeight.Bold,
                                                     color = if (curso == state.cursoSeleccionado) VinoTintoOleo else NegroTexto,
+                                                    maxLines = 1,
+                                                    softWrap = false,
                                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                                 )
                                             }
