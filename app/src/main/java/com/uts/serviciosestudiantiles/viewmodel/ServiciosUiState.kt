@@ -19,6 +19,7 @@ data class ServiciosUiState(
     val totalAcumulado: Double = 0.0,
     val mensajeMensajeEstado: String? = null,
     val esUsuarioExistente: Boolean = false,
+    val esError: Boolean = false,
     val cursosDisponibles: Map<String, Double> = mapOf(
         "Inglés Técnico" to 300000.0,
         "Programación Web" to 450000.0,

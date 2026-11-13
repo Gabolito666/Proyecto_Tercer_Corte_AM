@@ -84,20 +84,18 @@ class ServiciosViewModelTest {
         assertEquals(450000.0, state.totalAcumulado, 0.01)
         assertEquals("20987654", state.listaLiquidaciones.first().codigoEstudiante)
 
-        // 3. Volver a ingresar el código de Estudiante 1 (Existente -> Restauración)
+        // 3. Intentar ingresar con el código de Estudiante 1 ya usado -> Debe salir error de código ocupado
         viewModel.onNombreCambiado("Gabriel P.")
         viewModel.onCodigoCambiado("10987654")
         viewModel.guardarPerfil()
         advanceUntilIdle()
 
         state = viewModel.uiState.value
-        assertTrue(state.esUsuarioExistente)
-        assertEquals("Sesión cargada: Datos e historial restaurados", state.mensajeMensajeEstado)
-        // Debe recuperar el perfil guardado original y su historial completo
-        assertEquals("Gabriel Prado", state.campoNombre)
-        assertEquals("Gabriel Prado", state.perfilGuardado?.nombre)
-        assertEquals(2, state.listaLiquidaciones.size)
-        assertEquals(550000.0, state.totalAcumulado, 0.01)
-        assertTrue(state.listaLiquidaciones.all { it.codigoEstudiante == "10987654" })
+        assertTrue(state.esError)
+        assertEquals("El código ya está ocupado", state.mensajeMensajeEstado)
+        // No debe cambiar automáticamente los nombres por el usuario ya asociado con el código
+        assertEquals("Gabriel P.", state.campoNombre)
+        assertEquals("10987654", state.campoCodigo)
+        assertFalse(state.puedeLiquidar)
     }
 }

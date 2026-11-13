@@ -65,11 +65,11 @@ class ServiciosViewModel(
 
     // Funciones de Módulo 1 (Gestión de Perfil)
     fun onNombreCambiado(nombre: String) {
-        _uiState.update { it.copy(campoNombre = nombre, mensajeMensajeEstado = null) }
+        _uiState.update { it.copy(campoNombre = nombre, mensajeMensajeEstado = null, esError = false) }
     }
 
     fun onCodigoCambiado(codigo: String) {
-        _uiState.update { it.copy(campoCodigo = codigo, mensajeMensajeEstado = null) }
+        _uiState.update { it.copy(campoCodigo = codigo, mensajeMensajeEstado = null, esError = false) }
     }
 
     fun onFacultadSeleccionada(facultad: String) {
@@ -99,22 +99,13 @@ class ServiciosViewModel(
             val perfilExistente = repository.buscarPerfilPorCodigo(codigo)
 
             if (perfilExistente != null) {
-                // El código YA existe en la nube o almacenamiento local
-                val liquidacionesEstudiante = repository.obtenerLiquidacionesPorCodigo(codigo)
-                val totalEstudiante = liquidacionesEstudiante.sumOf { it.totalAPagar }
-
+                // El código YA está ocupado: emitir mensaje de error y mantener intacto el nombre ingresado
                 _uiState.update {
                     it.copy(
-                        campoNombre = perfilExistente.nombre,
-                        campoCodigo = perfilExistente.codigo,
-                        facultadSeleccionada = perfilExistente.facultad,
-                        perfilGuardado = perfilExistente,
-                        correoSimulado = perfilExistente.correoInstitucional,
-                        puedeLiquidar = true,
-                        esUsuarioExistente = true,
-                        mensajeMensajeEstado = "Sesión cargada: Datos e historial restaurados",
-                        listaLiquidaciones = liquidacionesEstudiante,
-                        totalAcumulado = totalEstudiante
+                        esError = true,
+                        esUsuarioExistente = false,
+                        mensajeMensajeEstado = "El código ya está ocupado",
+                        puedeLiquidar = false
                     )
                 }
             } else {
@@ -142,6 +133,7 @@ class ServiciosViewModel(
                         correoSimulado = correo,
                         puedeLiquidar = true,
                         esUsuarioExistente = false,
+                        esError = false,
                         mensajeMensajeEstado = "Nuevo estudiante registrado: Perfil guardado con éxito",
                         listaLiquidaciones = liquidacionesEstudiante,
                         totalAcumulado = totalEstudiante

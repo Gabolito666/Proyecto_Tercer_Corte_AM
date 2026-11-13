@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Verified
@@ -156,7 +157,7 @@ fun PerfilScreen(
                         colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
                         border = BorderStroke(
                             width = 1.5.dp,
-                            color = if (state.esUsuarioExistente) VerdeOpalo else VinoTintoOleo
+                            color = if (state.esError) VinoTintoOleo else if (state.esUsuarioExistente) VerdeOpalo else VinoTintoOleo
                         ),
                         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
@@ -168,14 +169,14 @@ fun PerfilScreen(
                         ) {
                             Surface(
                                 shape = CircleShape,
-                                color = if (state.esUsuarioExistente) VerdeOpaloClaro else CremaFondo,
+                                color = if (state.esError) VinoTintoOleo.copy(alpha = 0.12f) else if (state.esUsuarioExistente) VerdeOpaloClaro else CremaFondo,
                                 modifier = Modifier.size(38.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
-                                        imageVector = if (state.esUsuarioExistente) Icons.Default.Verified else Icons.Default.CheckCircle,
+                                        imageVector = if (state.esError) Icons.Default.Error else if (state.esUsuarioExistente) Icons.Default.Verified else Icons.Default.CheckCircle,
                                         contentDescription = null,
-                                        tint = if (state.esUsuarioExistente) VinoTintoOleo else VerdeOpalo,
+                                        tint = if (state.esError) VinoTintoOleo else if (state.esUsuarioExistente) VinoTintoOleo else VerdeOpalo,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
@@ -183,10 +184,10 @@ fun PerfilScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = if (state.esUsuarioExistente) "Estudiante Existente Cargado" else "Registro Local Exitoso",
+                                    text = if (state.esError) "Código No Disponible" else if (state.esUsuarioExistente) "Estudiante Existente Cargado" else "Registro Local Exitoso",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (state.esUsuarioExistente) VinoTintoOleo else NegroTexto
+                                    color = if (state.esError) VinoTintoOleo else if (state.esUsuarioExistente) VinoTintoOleo else NegroTexto
                                 )
                                 Text(
                                     text = mensaje,
@@ -196,13 +197,13 @@ fun PerfilScreen(
                             }
                             Surface(
                                 shape = RoundedCornerShape(50),
-                                color = if (state.esUsuarioExistente) VerdeOpalo else VinoTintoOleo
+                                color = if (state.esError) VinoTintoOleo else if (state.esUsuarioExistente) VerdeOpalo else VinoTintoOleo
                             ) {
                                 Text(
-                                    text = if (state.esUsuarioExistente) "Cargado" else "Nuevo",
+                                    text = if (state.esError) "Ocupado" else if (state.esUsuarioExistente) "Cargado" else "Nuevo",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (state.esUsuarioExistente) NegroTexto else BlancoSuperficie,
+                                    color = if (state.esError) BlancoSuperficie else if (state.esUsuarioExistente) NegroTexto else BlancoSuperficie,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                 )
                             }
@@ -295,9 +296,22 @@ fun PerfilScreen(
                         onValueChange = { viewModel.onCodigoCambiado(it) },
                         label = { Text("Código Estudiantil") },
                         placeholder = { Text("Ej. 1098765432") },
+                        isError = state.esError,
+                        supportingText = if (state.esError) {
+                            { Text(text = "El código ya está ocupado", color = VinoTintoOleo, fontWeight = FontWeight.SemiBold) }
+                        } else null,
                         leadingIcon = {
                             Icon(imageVector = Icons.Default.Badge, contentDescription = null)
                         },
+                        trailingIcon = if (state.esError) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Default.Error,
+                                    contentDescription = "Error",
+                                    tint = VinoTintoOleo
+                                )
+                            }
+                        } else null,
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier
