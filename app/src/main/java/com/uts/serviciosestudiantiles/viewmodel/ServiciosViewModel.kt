@@ -354,7 +354,23 @@ class ServiciosViewModel(
     }
 
     fun onBecaCambiada(tieneBeca: Boolean) {
-        _uiState.update { it.copy(tieneBeca = tieneBeca) }
+        if (tieneBeca) {
+            val primeraBeca = _uiState.value.becasDisponibles.firstOrNull()
+            _uiState.update {
+                it.copy(
+                    tieneBeca = true,
+                    becaSeleccionadaId = primeraBeca?.id ?: 1,
+                    porcentajeBeca = primeraBeca?.porcentajeDescuento ?: it.porcentajeBeca
+                )
+            }
+        } else {
+            _uiState.update {
+                it.copy(
+                    tieneBeca = false,
+                    becaSeleccionadaId = null
+                )
+            }
+        }
     }
 
     fun onIcetexCambiado(tieneIcetex: Boolean) {

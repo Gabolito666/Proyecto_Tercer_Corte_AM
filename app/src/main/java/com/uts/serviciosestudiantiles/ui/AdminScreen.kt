@@ -714,8 +714,9 @@ private fun SeccionTodasLasLiquidaciones(
                             )
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 if (liq.tieneBeca) {
+                                    val becaNombre = state.becasDisponibles.firstOrNull { it.id == liq.becaId }?.nombre ?: "Beca"
                                     Surface(shape = RoundedCornerShape(50), color = VerdeOpaloClaro) {
-                                        Text("Beca", color = NegroTexto, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                        Text(becaNombre, color = NegroTexto, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                     }
                                 }
                                 if (liq.tieneIcetex) {

@@ -328,62 +328,136 @@ fun MatriculaScreen(
 
                     HorizontalDivider(color = GrisPlata, thickness = 1.dp)
 
-                    // Beca de Excelencia
+                    // Becas Institucionales desde Supabase
                     if (state.becaHabilitada) {
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = if (state.tieneBeca) VerdeOpaloClaro else CremaFondo,
-                            border = BorderStroke(
-                                width = 1.dp,
-                                color = if (state.tieneBeca) VerdeOpalo else GrisPlata
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    role = Role.Checkbox,
-                                    onClick = { viewModel.onBecaCambiada(!state.tieneBeca) }
-                                )
-                        ) {
-                            Row(
+                        Text(
+                            text = "Becas Institucionales Disponibles",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = NegroTexto
+                        )
+
+                        if (state.becasDisponibles.isEmpty()) {
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = if (state.tieneBeca) VerdeOpaloClaro else CremaFondo,
+                                border = BorderStroke(1.dp, if (state.tieneBeca) VerdeOpalo else GrisPlata),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .clickable { viewModel.onBecaCambiada(!state.tieneBeca) }
                             ) {
-                                Checkbox(
-                                    checked = state.tieneBeca,
-                                    onCheckedChange = { viewModel.onBecaCambiada(it) },
-                                    colors = CheckboxDefaults.colors(
-                                        checkedColor = VerdeOpalo,
-                                        checkmarkColor = NegroTexto
-                                    )
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Beca de Excelencia",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = NegroTexto
-                                    )
-                                    Text(
-                                        text = "$becaPorcentajeInt% de descuento sobre el costo base",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = GrisTextoSecundario
-                                    )
-                                }
-                                Surface(
-                                    shape = RoundedCornerShape(50),
-                                    color = if (state.tieneBeca) VerdeOpalo else BlancoSuperficie,
-                                    border = BorderStroke(1.dp, VerdeOpalo)
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = "-$becaPorcentajeInt%",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (state.tieneBeca) NegroTexto else VerdeOpalo,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    Checkbox(
+                                        checked = state.tieneBeca,
+                                        onCheckedChange = { viewModel.onBecaCambiada(it) },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = VerdeOpalo,
+                                            checkmarkColor = NegroTexto
+                                        )
                                     )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Beca de Excelencia",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = NegroTexto
+                                        )
+                                        Text(
+                                            text = "$becaPorcentajeInt% de descuento sobre el costo base",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = GrisTextoSecundario
+                                        )
+                                    }
+                                    Surface(
+                                        shape = RoundedCornerShape(50),
+                                        color = if (state.tieneBeca) VerdeOpalo else BlancoSuperficie,
+                                        border = BorderStroke(1.dp, VerdeOpalo)
+                                    ) {
+                                        Text(
+                                            text = "-$becaPorcentajeInt%",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (state.tieneBeca) NegroTexto else VerdeOpalo,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            state.becasDisponibles.filter { it.activa }.forEach { beca ->
+                                val estaSeleccionada = state.tieneBeca && (state.becaSeleccionadaId == beca.id || (state.becaSeleccionadaId == null && state.becasDisponibles.firstOrNull()?.id == beca.id))
+                                val pctDesc = (beca.porcentajeDescuento * 100).toInt()
+
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = if (estaSeleccionada) VerdeOpaloClaro else BlancoSuperficie,
+                                    border = BorderStroke(
+                                        width = if (estaSeleccionada) 1.5.dp else 1.dp,
+                                        color = if (estaSeleccionada) VerdeOpalo else GrisPlata
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            if (estaSeleccionada) {
+                                                viewModel.seleccionarBeca(null)
+                                            } else {
+                                                viewModel.seleccionarBeca(beca.id)
+                                            }
+                                        }
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Checkbox(
+                                            checked = estaSeleccionada,
+                                            onCheckedChange = { check ->
+                                                viewModel.seleccionarBeca(if (check) beca.id else null)
+                                            },
+                                            colors = CheckboxDefaults.colors(
+                                                checkedColor = VerdeOpalo,
+                                                checkmarkColor = NegroTexto
+                                            )
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = beca.nombre,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = if (estaSeleccionada) FontWeight.Bold else FontWeight.Medium,
+                                                color = NegroTexto
+                                            )
+                                            Text(
+                                                text = beca.requisitos,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = GrisTextoSecundario,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(50),
+                                            color = if (estaSeleccionada) VerdeOpalo else CremaFondo,
+                                            border = BorderStroke(1.dp, VerdeOpalo)
+                                        ) {
+                                            Text(
+                                                text = "-$pctDesc%",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = if (estaSeleccionada) NegroTexto else VinoTintoOleo,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

@@ -297,9 +297,11 @@ fun HistorialScreen(
                         items = state.listaLiquidaciones,
                         key = { it.id }
                     ) { liquidacion ->
+                        val nombreBeca = state.becasDisponibles.firstOrNull { it.id == liquidacion.becaId }?.nombre
                         LiquidacionItemCard(
                             liquidacion = liquidacion,
-                            currencyFormat = currencyFormat
+                            currencyFormat = currencyFormat,
+                            nombreBeca = nombreBeca
                         )
                     }
                 }
@@ -312,6 +314,7 @@ fun HistorialScreen(
 private fun LiquidacionItemCard(
     liquidacion: LiquidacionMatricula,
     currencyFormat: NumberFormat,
+    nombreBeca: String? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -390,6 +393,7 @@ private fun LiquidacionItemCard(
             ) {
                 // Etiqueta píldora para Beca
                 if (liquidacion.tieneBeca) {
+                    val textoBeca = nombreBeca ?: "Beca: 50% desc."
                     Surface(
                         shape = RoundedCornerShape(50),
                         color = VerdeOpaloClaro,
@@ -407,7 +411,7 @@ private fun LiquidacionItemCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Beca: 50% desc.",
+                                text = textoBeca,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = NegroTexto
