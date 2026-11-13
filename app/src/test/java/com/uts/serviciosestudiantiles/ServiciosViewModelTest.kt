@@ -1,21 +1,45 @@
 package com.uts.serviciosestudiantiles
 
 import com.uts.serviciosestudiantiles.viewmodel.ServiciosViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ServiciosViewModelTest {
 
+    private val testDispatcher = StandardTestDispatcher()
+
+    @Before
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
     @Test
-    fun testFiltradoPorEstudianteYTrazabilidad() {
+    fun testFiltradoPorEstudianteYTrazabilidad() = runTest(testDispatcher) {
         val viewModel = ServiciosViewModel()
+        advanceUntilIdle()
 
         // 1. Guardar Estudiante 1 (Nuevo)
         viewModel.onNombreCambiado("Gabriel Prado")
         viewModel.onCodigoCambiado("10987654")
         viewModel.guardarPerfil()
+        advanceUntilIdle()
 
         var state = viewModel.uiState.value
         assertFalse(state.esUsuarioExistente)
@@ -24,10 +48,12 @@ class ServiciosViewModelTest {
         // Liquidar dos matrículas para Estudiante 1
         viewModel.onCursoSeleccionado("Inglés Técnico")
         viewModel.liquidarMatricula() // 300,000
+        advanceUntilIdle()
 
         viewModel.onCursoSeleccionado("Ciberseguridad")
         viewModel.onBecaCambiada(true)
         viewModel.liquidarMatricula() // 500,000 * 0.5 = 250,000
+        advanceUntilIdle()
 
         state = viewModel.uiState.value
         assertEquals(2, state.listaLiquidaciones.size)
@@ -38,6 +64,7 @@ class ServiciosViewModelTest {
         viewModel.onNombreCambiado("Ana Maria")
         viewModel.onCodigoCambiado("20987654")
         viewModel.guardarPerfil()
+        advanceUntilIdle()
 
         state = viewModel.uiState.value
         assertFalse(state.esUsuarioExistente)
@@ -48,6 +75,7 @@ class ServiciosViewModelTest {
         // Liquidar una matrícula para Estudiante 2
         viewModel.onCursoSeleccionado("Programación Web")
         viewModel.liquidarMatricula() // 450,000
+        advanceUntilIdle()
 
         state = viewModel.uiState.value
         assertEquals(1, state.listaLiquidaciones.size)
@@ -58,6 +86,7 @@ class ServiciosViewModelTest {
         viewModel.onNombreCambiado("Gabriel P.")
         viewModel.onCodigoCambiado("10987654")
         viewModel.guardarPerfil()
+        advanceUntilIdle()
 
         state = viewModel.uiState.value
         assertTrue(state.esUsuarioExistente)

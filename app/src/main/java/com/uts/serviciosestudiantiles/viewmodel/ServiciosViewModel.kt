@@ -42,21 +42,23 @@ class ServiciosViewModel(
     fun cargarDatosPersistidos() {
         val ultimoPerfil = repository.obtenerPerfil()
         if (ultimoPerfil != null) {
-            val liquidaciones = repository.obtenerLiquidacionesPorCodigo(ultimoPerfil.codigo)
-            val total = liquidaciones.sumOf { it.totalAPagar }
-            _uiState.update {
-                it.copy(
-                    campoNombre = ultimoPerfil.nombre,
-                    campoCodigo = ultimoPerfil.codigo,
-                    facultadSeleccionada = ultimoPerfil.facultad,
-                    perfilGuardado = ultimoPerfil,
-                    correoSimulado = ultimoPerfil.correoInstitucional,
-                    puedeLiquidar = true,
-                    esUsuarioExistente = true,
-                    mensajeMensajeEstado = "Sesión cargada: Datos e historial restaurados",
-                    listaLiquidaciones = liquidaciones,
-                    totalAcumulado = total
-                )
+            viewModelScope.launch {
+                val liquidaciones = repository.obtenerLiquidacionesPorCodigo(ultimoPerfil.codigo)
+                val total = liquidaciones.sumOf { it.totalAPagar }
+                _uiState.update {
+                    it.copy(
+                        campoNombre = ultimoPerfil.nombre,
+                        campoCodigo = ultimoPerfil.codigo,
+                        facultadSeleccionada = ultimoPerfil.facultad,
+                        perfilGuardado = ultimoPerfil,
+                        correoSimulado = ultimoPerfil.correoInstitucional,
+                        puedeLiquidar = true,
+                        esUsuarioExistente = true,
+                        mensajeMensajeEstado = "Sesión cargada: Datos e historial restaurados",
+                        listaLiquidaciones = liquidaciones,
+                        totalAcumulado = total
+                    )
+                }
             }
         }
     }
@@ -92,73 +94,57 @@ class ServiciosViewModel(
             return
         }
 
-        // Validación de unicidad de código de estudiante
-        val perfilExistente = repository.buscarPerfilPorCodigo(codigo)
+        viewModelScope.launch {
+            // Validación de unicidad de código de estudiante en Supabase / local
+            val perfilExistente = repository.buscarPerfilPorCodigo(codigo)
 
-        if (perfilExistente != null) {
-            // El código YA existe en almacenamiento local
-            val liquidacionesEstudiante = repository.obtenerLiquidacionesPorCodigo(codigo)
-            val totalEstudiante = liquidacionesEstudiante.sumOf { it.totalAPagar }
+            if (perfilExistente != null) {
+                // El código YA existe en la nube o almacenamiento local
+                val liquidacionesEstudiante = repository.obtenerLiquidacionesPorCodigo(codigo)
+                val totalEstudiante = liquidacionesEstudiante.sumOf { it.totalAPagar }
 
-            _uiState.update {
-                it.copy(
-                    campoNombre = perfilExistente.nombre,
-                    campoCodigo = perfilExistente.codigo,
-                    facultadSeleccionada = perfilExistente.facultad,
-                    perfilGuardado = perfilExistente,
-                    correoSimulado = perfilExistente.correoInstitucional,
-                    puedeLiquidar = true,
-                    esUsuarioExistente = true,
-                    mensajeMensajeEstado = "Sesión cargada: Datos e historial restaurados",
-                    listaLiquidaciones = liquidacionesEstudiante,
-                    totalAcumulado = totalEstudiante
-                )
-            }
-        } else {
-            // El código NO existe: registrar nuevo perfil y persistir localmente
-            val nombreLimpio = nombre.replace(" ", "").lowercase()
-            val codigoLimpio = codigo.replace(" ", "").lowercase()
-            val correo = "$nombreLimpio.$codigoLimpio@uts.edu.co"
-
-            val nuevoPerfil = PerfilEstudiante(
-                id = (repository.obtenerTodosLosPerfiles().maxOfOrNull { it.id } ?: 0) + 1,
-                nombre = nombre,
-                codigo = codigo,
-                facultad = currentState.facultadSeleccionada,
-                correoInstitucional = correo
-            )
-
-            viewModelScope.launch {
-                runCatching {
-                    repository.guardarPerfil(nuevoPerfil)
+                _uiState.update {
+                    it.copy(
+                        campoNombre = perfilExistente.nombre,
+                        campoCodigo = perfilExistente.codigo,
+                        facultadSeleccionada = perfilExistente.facultad,
+                        perfilGuardado = perfilExistente,
+                        correoSimulado = perfilExistente.correoInstitucional,
+                        puedeLiquidar = true,
+                        esUsuarioExistente = true,
+                        mensajeMensajeEstado = "Sesión cargada: Datos e historial restaurados",
+                        listaLiquidaciones = liquidacionesEstudiante,
+                        totalAcumulado = totalEstudiante
+                    )
                 }
+            } else {
+                // El código NO existe: registrar nuevo perfil y persistir en Supabase
+                val nombreLimpio = nombre.replace(" ", "").lowercase()
+                val codigoLimpio = codigo.replace(" ", "").lowercase()
+                val correo = "$nombreLimpio.$codigoLimpio@uts.edu.co"
+
+                val nuevoPerfil = PerfilEstudiante(
+                    id = (repository.obtenerTodosLosPerfiles().maxOfOrNull { it.id } ?: 0) + 1,
+                    nombre = nombre,
+                    codigo = codigo,
+                    facultad = currentState.facultadSeleccionada,
+                    correoInstitucional = correo
+                )
+
+                repository.guardarPerfil(nuevoPerfil)
+
+                val liquidacionesEstudiante = repository.obtenerLiquidacionesPorCodigo(codigo)
+                val totalEstudiante = liquidacionesEstudiante.sumOf { it.totalAPagar }
 
                 _uiState.update {
                     it.copy(
                         perfilGuardado = nuevoPerfil,
                         correoSimulado = correo,
-                        puedeLiquidar = true
-                    )
-                }
-            }
-        }
-    }
-
-    fun buscarPerfilPorCodigo(codigo: String) {
-        val codigoLimpio = codigo.trim()
-        if (codigoLimpio.isEmpty()) return
-
-        viewModelScope.launch {
-            val perfilEncontrado = repository.buscarPerfilPorCodigo(codigoLimpio)
-            if (perfilEncontrado != null) {
-                _uiState.update {
-                    it.copy(
-                        campoNombre = perfilEncontrado.nombre,
-                        campoCodigo = perfilEncontrado.codigo,
-                        facultadSeleccionada = perfilEncontrado.facultad,
-                        perfilGuardado = perfilEncontrado,
-                        correoSimulado = perfilEncontrado.correoInstitucional,
-                        puedeLiquidar = true
+                        puedeLiquidar = true,
+                        esUsuarioExistente = false,
+                        mensajeMensajeEstado = "Nuevo estudiante registrado: Perfil guardado con éxito",
+                        listaLiquidaciones = liquidacionesEstudiante,
+                        totalAcumulado = totalEstudiante
                     )
                 }
             }
@@ -194,14 +180,14 @@ class ServiciosViewModel(
             return
         }
 
-        val codigoEstudiante = currentState.perfilGuardado.codigo
         val costoBase = cursosConCostos[currentState.cursoSeleccionado] ?: 0.0
         val descuento = if (currentState.tieneBeca) costoBase * 0.5 else 0.0
         val recargo = if (currentState.tieneIcetex) costoBase * 0.05 else 0.0
         val totalAPagar = costoBase - descuento + recargo
 
         val liquidacionesActuales = currentState.listaLiquidaciones
-        val nuevoId = (liquidacionesActuales.maxOfOrNull { it.id } ?: 0) + 1
+        val todasLasLiquidaciones = repository.obtenerLiquidaciones()
+        val nuevoId = (todasLasLiquidaciones.maxOfOrNull { it.id } ?: liquidacionesActuales.maxOfOrNull { it.id } ?: 0) + 1
 
         val nuevaLiquidacion = LiquidacionMatricula(
             id = nuevoId,
@@ -214,21 +200,16 @@ class ServiciosViewModel(
         )
 
         viewModelScope.launch {
-            runCatching {
-                repository.guardarLiquidacion(nuevaLiquidacion)
-            }
+            // Guardado asíncrono en Supabase
+            repository.guardarLiquidacion(nuevaLiquidacion)
 
-            val listaActualizada = runCatching {
-                val remotas = repository.obtenerLiquidacionesPorCodigo(codigoEstudiante)
-                if (remotas.isNotEmpty()) remotas else (liquidacionesActuales + nuevaLiquidacion)
-            }.getOrElse {
-                liquidacionesActuales + nuevaLiquidacion
-            }
-            val nuevoTotalAcumulado = listaActualizada.sumOf { it.totalAPagar }
+            val listaActualizada = repository.obtenerLiquidacionesPorCodigo(perfilActual.codigo)
+            val listaFinal = if (listaActualizada.isNotEmpty()) listaActualizada else (liquidacionesActuales + nuevaLiquidacion)
+            val nuevoTotalAcumulado = listaFinal.sumOf { it.totalAPagar }
 
             _uiState.update {
                 it.copy(
-                    listaLiquidaciones = listaActualizada,
+                    listaLiquidaciones = listaFinal,
                     totalAcumulado = nuevoTotalAcumulado,
                     tieneBeca = false,
                     tieneIcetex = false
@@ -237,36 +218,27 @@ class ServiciosViewModel(
         }
     }
 
-    fun obtenerLiquidacionesPorCodigo(codigo: String) {
-        val codigoLimpio = codigo.trim()
-        if (codigoLimpio.isEmpty()) return
-
-        viewModelScope.launch {
-            val remotas = repository.obtenerLiquidacionesPorCodigo(codigoLimpio)
+    fun actualizarHistorialPorEstudiante(codigoEstudiante: String? = _uiState.value.perfilGuardado?.codigo) {
+        if (codigoEstudiante.isNullOrBlank()) {
             _uiState.update {
                 it.copy(
-                    listaLiquidaciones = remotas,
-                    totalAcumulado = remotas.sumOf { it.totalAPagar }
+                    listaLiquidaciones = emptyList(),
+                    totalAcumulado = 0.0
                 )
             }
+            return
         }
 
-        actualizarHistorialPorEstudiante(perfilActual.codigo)
-    }
+        viewModelScope.launch {
+            val liquidacionesFiltradas = repository.obtenerLiquidacionesPorCodigo(codigoEstudiante)
+            val nuevoTotal = liquidacionesFiltradas.sumOf { it.totalAPagar }
 
-    fun actualizarHistorialPorEstudiante(codigoEstudiante: String? = _uiState.value.perfilGuardado?.codigo) {
-        val liquidacionesFiltradas = if (codigoEstudiante.isNullOrBlank()) {
-            emptyList()
-        } else {
-            repository.obtenerLiquidacionesPorCodigo(codigoEstudiante)
-        }
-        val nuevoTotal = liquidacionesFiltradas.sumOf { it.totalAPagar }
-
-        _uiState.update {
-            it.copy(
-                listaLiquidaciones = liquidacionesFiltradas,
-                totalAcumulado = nuevoTotal
-            )
+            _uiState.update {
+                it.copy(
+                    listaLiquidaciones = liquidacionesFiltradas,
+                    totalAcumulado = nuevoTotal
+                )
+            }
         }
     }
 }
