@@ -3,6 +3,11 @@ package com.uts.serviciosestudiantiles.viewmodel
 import com.uts.serviciosestudiantiles.data.LiquidacionMatricula
 import com.uts.serviciosestudiantiles.data.PerfilEstudiante
 
+enum class ModoAuth {
+    LOGIN,
+    REGISTRO
+}
+
 data class ServiciosUiState(
     val campoNombre: String = "",
     val campoCodigo: String = "",
@@ -10,12 +15,21 @@ data class ServiciosUiState(
     val menuFacultadAbierto: Boolean = false,
     val perfilGuardado: PerfilEstudiante? = null,
     val correoSimulado: String = "",
+    val modoAuth: ModoAuth = ModoAuth.LOGIN,
+    val esAdmin: Boolean = false,
     val cursoSeleccionado: String = "Inglés Técnico",
+    val cursosSeleccionados: Set<String> = setOf("Inglés Técnico"),
     val menuCursoAbierto: Boolean = false,
     val tieneBeca: Boolean = false,
     val tieneIcetex: Boolean = false,
+    val porcentajeBeca: Double = 0.50,
+    val porcentajeIcetex: Double = 0.05,
+    val becaHabilitada: Boolean = true,
+    val icetexHabilitado: Boolean = true,
     val puedeLiquidar: Boolean = false,
     val listaLiquidaciones: List<LiquidacionMatricula> = emptyList(),
+    val todasLasLiquidacionesAdmin: List<LiquidacionMatricula> = emptyList(),
+    val todosLosPerfilesAdmin: List<PerfilEstudiante> = emptyList(),
     val totalAcumulado: Double = 0.0,
     val mensajeMensajeEstado: String? = null,
     val esUsuarioExistente: Boolean = false,
@@ -31,4 +45,20 @@ data class ServiciosUiState(
     )
 ) {
     val mensajeEstado: String? get() = mensajeMensajeEstado
+
+    // Cálculo matemático: el crédito del Icetex se aplica tras deducir los descuentos correspondientes
+    val subtotalBase: Double
+        get() = cursosSeleccionados.sumOf { cursosDisponibles[it] ?: 0.0 }
+
+    val descuentoBeca: Double
+        get() = if (tieneBeca && becaHabilitada) subtotalBase * porcentajeBeca else 0.0
+
+    val baseConDescuento: Double
+        get() = (subtotalBase - descuentoBeca).coerceAtLeast(0.0)
+
+    val recargoIcetex: Double
+        get() = if (tieneIcetex && icetexHabilitado) baseConDescuento * porcentajeIcetex else 0.0
+
+    val totalCalculado: Double
+        get() = baseConDescuento + recargoIcetex
 }

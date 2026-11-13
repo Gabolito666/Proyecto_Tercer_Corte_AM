@@ -140,6 +140,27 @@ class ServiciosRepository(
         return liquidacionesLocales.toList()
     }
 
+    suspend fun obtenerTodosLosPerfilesRemotos(): List<PerfilEstudiante> {
+        if (isConfigured) {
+            val remotas = withContext(Dispatchers.IO) {
+                runCatching {
+                    client.from("perfiles")
+                        .select()
+                        .decodeList<PerfilEstudiante>()
+                }.getOrNull()
+            }
+            if (remotas != null) {
+                remotas.forEach { perfilesLocales[it.codigo] = it }
+                return remotas
+            }
+        }
+        return perfilesLocales.values.toList()
+    }
+
+    fun limpiarSesionActiva() {
+        perfilActivo = null
+    }
+
     fun obtenerPerfil(): PerfilEstudiante? = perfilActivo ?: perfilesLocales.values.lastOrNull()
 
     fun obtenerLiquidaciones(): List<LiquidacionMatricula> = liquidacionesLocales.toList()

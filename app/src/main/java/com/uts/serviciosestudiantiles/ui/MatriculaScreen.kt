@@ -21,26 +21,20 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Percent
-import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -69,7 +63,6 @@ import com.uts.serviciosestudiantiles.viewmodel.ServiciosViewModel
 import java.text.NumberFormat
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatriculaScreen(
     viewModel: ServiciosViewModel,
@@ -82,26 +75,8 @@ fun MatriculaScreen(
         maximumFractionDigits = 0
     }
 
-    val costoBaseActual = viewModel.cursosConCostos[state.cursoSeleccionado] ?: 0.0
-    val descuentoEstimado = if (state.tieneBeca) costoBaseActual * 0.5 else 0.0
-    val recargoEstimado = if (state.tieneIcetex) costoBaseActual * 0.05 else 0.0
-    val totalEstimado = costoBaseActual - descuentoEstimado + recargoEstimado
-
-    val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = VinoTintoOleo,
-        unfocusedBorderColor = GrisPlata,
-        focusedLabelColor = VinoTintoOleo,
-        unfocusedLabelColor = GrisTextoSecundario,
-        cursorColor = VinoTintoOleo,
-        focusedLeadingIconColor = VinoTintoOleo,
-        unfocusedLeadingIconColor = GrisTextoSecundario,
-        focusedTrailingIconColor = VinoTintoOleo,
-        unfocusedTrailingIconColor = GrisTextoSecundario,
-        focusedContainerColor = BlancoSuperficie,
-        unfocusedContainerColor = BlancoSuperficie,
-        focusedTextColor = NegroTexto,
-        unfocusedTextColor = NegroTexto
-    )
+    val becaPorcentajeInt = (state.porcentajeBeca * 100).toInt()
+    val icetexPorcentajeInt = (state.porcentajeIcetex * 100).toInt()
 
     Box(
         modifier = modifier
@@ -113,7 +88,7 @@ fun MatriculaScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Encabezado de sección estilo Nubank
             Column(
@@ -135,13 +110,13 @@ fun MatriculaScreen(
                     color = NegroTexto
                 )
                 Text(
-                    text = "Selecciona un curso libre y aplica beneficios institucionales.",
+                    text = "Inscríbete en uno o varios cursos libres simultáneamente y aplica beneficios UTS.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = GrisTextoSecundario
                 )
             }
 
-            // Alerta de estado si el perfil no ha sido registrado
+            // Alerta si el usuario no ha iniciado sesión o no se ha registrado
             if (!state.puedeLiquidar) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -173,13 +148,13 @@ fun MatriculaScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Perfil pendiente",
+                                text = "Sesión requerida",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MagentaOleo
                             )
                             Text(
-                                text = "Completa y guarda tus datos en la pestaña '1. Perfil' para habilitar la liquidación.",
+                                text = "Inicia sesión o crea tu perfil en la pestaña '1. Perfil' para liquidar cursos.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GrisTextoSecundario
                             )
@@ -188,7 +163,7 @@ fun MatriculaScreen(
                 }
             }
 
-            // Tarjeta 1: Selector de Cursos Libres (Oferta Ampliada)
+            // Tarjeta 1: Selección Múltiple de Cursos Libres
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(22.dp),
@@ -202,127 +177,111 @@ fun MatriculaScreen(
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(
-                            shape = CircleShape,
-                            color = CremaFondo,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                                    contentDescription = null,
-                                    tint = VinoTintoOleo,
-                                    modifier = Modifier.size(20.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                shape = CircleShape,
+                                color = CremaFondo,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                                        contentDescription = null,
+                                        tint = VinoTintoOleo,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Oferta Académica",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = NegroTexto
+                                )
+                                Text(
+                                    text = "Selecciona uno o varios cursos a tomar",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = GrisTextoSecundario
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = if (state.cursosSeleccionados.isNotEmpty()) VerdeOpaloClaro else CremaFondo,
+                            border = BorderStroke(1.dp, if (state.cursosSeleccionados.isNotEmpty()) VerdeOpalo else GrisPlata)
+                        ) {
                             Text(
-                                text = "Oferta Académica",
-                                style = MaterialTheme.typography.titleMedium,
+                                text = "${state.cursosSeleccionados.size} selec.",
+                                style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = NegroTexto
-                            )
-                            Text(
-                                text = "7 cursos libres disponibles con tarifas base UTS",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = GrisTextoSecundario
+                                color = if (state.cursosSeleccionados.isNotEmpty()) NegroTexto else GrisTextoSecundario,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }
                     }
 
                     HorizontalDivider(color = GrisPlata, thickness = 1.dp)
 
-                    ExposedDropdownMenuBox(
-                        expanded = state.menuCursoAbierto,
-                        onExpandedChange = { viewModel.toggleMenuCurso(it) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        OutlinedTextField(
-                            value = "${state.cursoSeleccionado}  •  ${currencyFormat.format(costoBaseActual)}",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Curso Libre Seleccionado") },
-                            leadingIcon = {
-                                Icon(imageVector = Icons.Default.Receipt, contentDescription = null)
-                            },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = state.menuCursoAbierto)
-                            },
-                            modifier = Modifier
-                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true)
-                                .fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = textFieldColors
-                        )
-
-                        ExposedDropdownMenu(
-                            expanded = state.menuCursoAbierto,
-                            onDismissRequest = { viewModel.toggleMenuCurso(false) },
-                            modifier = Modifier.background(BlancoSuperficie)
-                        ) {
-                            viewModel.cursosConCostos.forEach { (curso, costo) ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 4.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Column(
-                                                modifier = Modifier
-                                                    .weight(1f)
-                                                    .padding(end = 12.dp)
-                                            ) {
-                                                Text(
-                                                    text = curso,
-                                                    style = MaterialTheme.typography.bodyLarge,
-                                                    fontWeight = if (curso == state.cursoSeleccionado) FontWeight.Bold else FontWeight.Medium,
-                                                    color = NegroTexto
-                                                )
-                                                Spacer(modifier = Modifier.height(2.dp))
-                                                Text(
-                                                    text = "Tarifa base: ${currencyFormat.format(costo)}",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    color = VinoTintoOleo
-                                                )
-                                            }
-                                            Surface(
-                                                shape = RoundedCornerShape(50),
-                                                color = if (curso == state.cursoSeleccionado) VerdeOpaloClaro else CremaFondo,
-                                                border = BorderStroke(
-                                                    1.dp,
-                                                    if (curso == state.cursoSeleccionado) VerdeOpalo else GrisPlata
-                                                )
-                                            ) {
-                                                Text(
-                                                    text = currencyFormat.format(costo),
-                                                    style = MaterialTheme.typography.labelMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = if (curso == state.cursoSeleccionado) VinoTintoOleo else NegroTexto,
-                                                    maxLines = 1,
-                                                    softWrap = false,
-                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                                )
-                                            }
-                                        }
-                                    },
-                                    onClick = {
-                                        viewModel.onCursoSeleccionado(curso)
+                    // Lista de cursos libres seleccionables
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        state.cursosDisponibles.forEach { (curso, costo) ->
+                            val estaSeleccionado = state.cursosSeleccionados.contains(curso)
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = if (estaSeleccionado) VerdeOpaloClaro.copy(alpha = 0.5f) else CremaFondo,
+                                border = BorderStroke(
+                                    width = if (estaSeleccionado) 1.5.dp else 1.dp,
+                                    color = if (estaSeleccionado) VerdeOpalo else GrisPlata
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { viewModel.toggleCursoSeleccionado(curso) }
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = estaSeleccionado,
+                                        onCheckedChange = { viewModel.toggleCursoSeleccionado(curso) },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = VerdeOpalo,
+                                            checkmarkColor = NegroTexto
+                                        )
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = curso,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = if (estaSeleccionado) FontWeight.Bold else FontWeight.Medium,
+                                            color = NegroTexto
+                                        )
+                                        Text(
+                                            text = "Tarifa base: ${currencyFormat.format(costo)}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (estaSeleccionado) VinoTintoOleo else GrisTextoSecundario,
+                                            fontWeight = if (estaSeleccionado) FontWeight.Bold else FontWeight.Normal
+                                        )
                                     }
-                                )
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // Tarjeta 2: Beneficios y Descuentos (Beca de Excelencia & Icetex)
+            // Tarjeta 2: Beneficios Institucionales (Beca & Icetex)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(22.dp),
@@ -360,7 +319,7 @@ fun MatriculaScreen(
                                 color = NegroTexto
                             )
                             Text(
-                                text = "Selecciona las condiciones de tu matrícula",
+                                text = "Opciones de financiación y descuentos UTS",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GrisTextoSecundario
                             )
@@ -369,131 +328,131 @@ fun MatriculaScreen(
 
                     HorizontalDivider(color = GrisPlata, thickness = 1.dp)
 
-                    // Fila 1: Beca de Excelencia estilizada con VerdeOpalo
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = if (state.tieneBeca) VerdeOpaloClaro else CremaFondo,
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = if (state.tieneBeca) VerdeOpalo else GrisPlata
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(
-                                role = Role.Checkbox,
-                                onClick = { viewModel.onBecaCambiada(!state.tieneBeca) }
-                            )
-                    ) {
-                        Row(
+                    // Beca de Excelencia
+                    if (state.becaHabilitada) {
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = if (state.tieneBeca) VerdeOpaloClaro else CremaFondo,
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = if (state.tieneBeca) VerdeOpalo else GrisPlata
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .clickable(
+                                    role = Role.Checkbox,
+                                    onClick = { viewModel.onBecaCambiada(!state.tieneBeca) }
+                                )
                         ) {
-                            Checkbox(
-                                checked = state.tieneBeca,
-                                onCheckedChange = { viewModel.onBecaCambiada(it) },
-                                colors = CheckboxDefaults.colors(
-                                    checkedColor = VerdeOpalo,
-                                    checkmarkColor = NegroTexto,
-                                    uncheckedColor = GrisTextoSecundario
-                                )
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Beca de Excelencia",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = NegroTexto
-                                )
-                                Text(
-                                    text = "50% de descuento sobre el costo base",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = GrisTextoSecundario
-                                )
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = if (state.tieneBeca) VerdeOpalo else BlancoSuperficie,
-                                border = BorderStroke(1.dp, VerdeOpalo)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "-50%",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (state.tieneBeca) NegroTexto else VerdeOpalo,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                Checkbox(
+                                    checked = state.tieneBeca,
+                                    onCheckedChange = { viewModel.onBecaCambiada(it) },
+                                    colors = CheckboxDefaults.colors(
+                                        checkedColor = VerdeOpalo,
+                                        checkmarkColor = NegroTexto
+                                    )
                                 )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Beca de Excelencia",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = NegroTexto
+                                    )
+                                    Text(
+                                        text = "$becaPorcentajeInt% de descuento sobre el costo base",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GrisTextoSecundario
+                                    )
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(50),
+                                    color = if (state.tieneBeca) VerdeOpalo else BlancoSuperficie,
+                                    border = BorderStroke(1.dp, VerdeOpalo)
+                                ) {
+                                    Text(
+                                        text = "-$becaPorcentajeInt%",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (state.tieneBeca) NegroTexto else VerdeOpalo,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
                             }
                         }
                     }
 
-                    // Fila 2: Crédito Icetex estilizado con MagentaOleo
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = if (state.tieneIcetex) MagentaOleoClaro else CremaFondo,
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = if (state.tieneIcetex) MagentaOleo else GrisPlata
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(
-                                role = Role.Switch,
-                                onClick = { viewModel.onIcetexCambiado(!state.tieneIcetex) }
-                            )
-                    ) {
-                        Row(
+                    // Crédito Icetex
+                    if (state.icetexHabilitado) {
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = if (state.tieneIcetex) MagentaOleoClaro else CremaFondo,
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = if (state.tieneIcetex) MagentaOleo else GrisPlata
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .clickable(
+                                    role = Role.Switch,
+                                    onClick = { viewModel.onIcetexCambiado(!state.tieneIcetex) }
+                                )
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Crédito Icetex",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = NegroTexto
-                                )
-                                Text(
-                                    text = "5% de recargo administrativo",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = GrisTextoSecundario
-                                )
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = if (state.tieneIcetex) MagentaOleo else BlancoSuperficie,
-                                border = BorderStroke(1.dp, MagentaOleo)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "+5%",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (state.tieneIcetex) BlancoSuperficie else MagentaOleo,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Crédito Icetex",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = NegroTexto
+                                    )
+                                    Text(
+                                        text = "$icetexPorcentajeInt% de recargo sobre el valor neto tras descuentos",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = GrisTextoSecundario
+                                    )
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(50),
+                                    color = if (state.tieneIcetex) MagentaOleo else BlancoSuperficie,
+                                    border = BorderStroke(1.dp, MagentaOleo)
+                                ) {
+                                    Text(
+                                        text = "+$icetexPorcentajeInt%",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (state.tieneIcetex) BlancoSuperficie else MagentaOleo,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Switch(
+                                    checked = state.tieneIcetex,
+                                    onCheckedChange = { viewModel.onIcetexCambiado(it) },
+                                    colors = SwitchDefaults.colors(
+                                        checkedTrackColor = MagentaOleo,
+                                        checkedThumbColor = BlancoSuperficie
+                                    )
                                 )
                             }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Switch(
-                                checked = state.tieneIcetex,
-                                onCheckedChange = { viewModel.onIcetexCambiado(it) },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = BlancoSuperficie,
-                                    checkedTrackColor = MagentaOleo,
-                                    uncheckedThumbColor = BlancoSuperficie,
-                                    uncheckedTrackColor = GrisPlataMate,
-                                    uncheckedBorderColor = GrisPlata
-                                )
-                            )
                         }
                     }
                 }
             }
 
-            // Tarjeta 3: Resumen y desglose de liquidación tipo factura Nubank
+            // Tarjeta 3: Resumen y Desglose Matemático Riguroso
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(22.dp),
@@ -513,7 +472,7 @@ fun MatriculaScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Resumen de Liquidación",
+                            text = "Liquidación Financiera",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = NegroTexto
@@ -528,54 +487,74 @@ fun MatriculaScreen(
 
                     HorizontalDivider(color = GrisPlata, thickness = 1.dp)
 
+                    // Subtotal base
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Costo base del curso:",
+                            text = "Subtotal cursos (${state.cursosSeleccionados.size}):",
                             style = MaterialTheme.typography.bodyMedium,
                             color = GrisTextoSecundario
                         )
                         Text(
-                            text = currencyFormat.format(costoBaseActual),
+                            text = currencyFormat.format(state.subtotalBase),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = NegroTexto
                         )
                     }
 
-                    if (state.tieneBeca) {
+                    // Descuento Beca
+                    if (state.tieneBeca && state.becaHabilitada) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Beca de Excelencia (-50%):",
+                                text = "Beca de Excelencia (-$becaPorcentajeInt%):",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = VinoTintoOleo
                             )
                             Text(
-                                text = "- ${currencyFormat.format(descuentoEstimado)}",
+                                text = "- ${currencyFormat.format(state.descuentoBeca)}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = VinoTintoOleo
                             )
                         }
-                    }
 
-                    if (state.tieneIcetex) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Recargo Icetex (+5%):",
+                                text = "Base neta tras descuento:",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GrisTextoSecundario
+                            )
+                            Text(
+                                text = currencyFormat.format(state.baseConDescuento),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = NegroTexto
+                            )
+                        }
+                    }
+
+                    // Recargo Icetex (calculado tras aplicar el descuento)
+                    if (state.tieneIcetex && state.icetexHabilitado) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Crédito Icetex (+$icetexPorcentajeInt% sobre base neta):",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MagentaOleo
                             )
                             Text(
-                                text = "+ ${currencyFormat.format(recargoEstimado)}",
+                                text = "+ ${currencyFormat.format(state.recargoIcetex)}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MagentaOleo
@@ -585,6 +564,7 @@ fun MatriculaScreen(
 
                     HorizontalDivider(color = GrisPlata, thickness = 1.dp)
 
+                    // Total a pagar
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -598,13 +578,13 @@ fun MatriculaScreen(
                                 color = NegroTexto
                             )
                             Text(
-                                text = "Valor final liquidado",
+                                text = "Valor liquidado para matrícula",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = GrisTextoSecundario
                             )
                         }
                         Text(
-                            text = currencyFormat.format(totalEstimado),
+                            text = currencyFormat.format(state.totalCalculado),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.ExtraBold,
                             color = VinoTintoOleo
@@ -613,11 +593,10 @@ fun MatriculaScreen(
                 }
             }
 
-            // Botón "Liquidar Matrícula" tipo píldora
-            // VinoTintoOleo cuando esté activo y GrisPlata mate cuando esté deshabilitado (enabled = state.puedeLiquidar)
+            // Botón Liquidar Matrícula
             Button(
                 onClick = { viewModel.liquidarMatricula() },
-                enabled = state.puedeLiquidar,
+                enabled = state.puedeLiquidar && state.cursosSeleccionados.isNotEmpty(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -637,7 +616,7 @@ fun MatriculaScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Liquidar Matrícula",
+                    text = "Liquidar Matrícula (${state.cursosSeleccionados.size} cursos)",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )

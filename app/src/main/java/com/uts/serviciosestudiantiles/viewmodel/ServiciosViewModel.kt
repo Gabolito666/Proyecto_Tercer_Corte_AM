@@ -17,7 +17,7 @@ class ServiciosViewModel(
 
     val facultades: List<String> = listOf("Ingenierías", "Ciencias Socioeconómicas")
 
-    val cursosConCostos: Map<String, Double> = mapOf(
+    val cursosConCostosIniciales: Map<String, Double> = mapOf(
         "Inglés Técnico" to 300000.0,
         "Programación Web" to 450000.0,
         "Ciberseguridad" to 500000.0,
@@ -27,10 +27,15 @@ class ServiciosViewModel(
         "Ciencia de Datos con Python" to 480000.0
     )
 
+    // Oferta dinámica accesible desde el ViewModel
+    val cursosConCostos: Map<String, Double>
+        get() = _uiState.value.cursosDisponibles
+
     private val _uiState = MutableStateFlow(
         ServiciosUiState(
             cursoSeleccionado = "Inglés Técnico",
-            cursosDisponibles = cursosConCostos
+            cursosSeleccionados = setOf("Inglés Técnico"),
+            cursosDisponibles = cursosConCostosIniciales
         )
     )
     val uiState: StateFlow<ServiciosUiState> = _uiState.asStateFlow()
@@ -63,7 +68,18 @@ class ServiciosViewModel(
         }
     }
 
-    // Funciones de Módulo 1 (Gestión de Perfil)
+    // --- MÓDULO 1: AUTENTICACIÓN (LOGIN, REGISTRO Y ADMINISTRADOR) ---
+
+    fun setModoAuth(modo: ModoAuth) {
+        _uiState.update {
+            it.copy(
+                modoAuth = modo,
+                mensajeMensajeEstado = null,
+                esError = false
+            )
+        }
+    }
+
     fun onNombreCambiado(nombre: String) {
         _uiState.update { it.copy(campoNombre = nombre, mensajeMensajeEstado = null, esError = false) }
     }
@@ -85,21 +101,107 @@ class ServiciosViewModel(
         _uiState.update { it.copy(menuFacultadAbierto = abierto) }
     }
 
+    /**
+     * Iniciar sesión para estudiantes registrados o perfil de Administrador (código "ADMIN")
+     */
+    fun iniciarSesion(codigoIngresado: String = _uiState.value.campoCodigo) {
+        val codigoLimpio = codigoIngresado.trim()
+        if (codigoLimpio.isEmpty()) {
+            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "Por favor ingresa un código estudiantil") }
+            return
+        }
+
+        // Acceso especial como Administrador institucional
+        if (codigoLimpio.equals("ADMIN", ignoreCase = true)) {
+            val adminPerfil = PerfilEstudiante(
+                id = 0,
+                nombre = "Administrador UTS",
+                codigo = "ADMIN",
+                facultad = "Dirección Académica",
+                correoInstitucional = "admin.uts@uts.edu.co"
+            )
+            viewModelScope.launch {
+                val todasLasLiquidaciones = repository.obtenerTodasLasLiquidaciones()
+                val todosLosPerfiles = repository.obtenerTodosLosPerfilesRemotos()
+                _uiState.update {
+                    it.copy(
+                        esAdmin = true,
+                        perfilGuardado = adminPerfil,
+                        campoNombre = adminPerfil.nombre,
+                        campoCodigo = adminPerfil.codigo,
+                        correoSimulado = adminPerfil.correoInstitucional,
+                        puedeLiquidar = true,
+                        esUsuarioExistente = true,
+                        esError = false,
+                        mensajeMensajeEstado = "Sesión iniciada como Administrador del Sistema",
+                        todasLasLiquidacionesAdmin = todasLasLiquidaciones,
+                        todosLosPerfilesAdmin = todosLosPerfiles,
+                        listaLiquidaciones = todasLasLiquidaciones,
+                        totalAcumulado = todasLasLiquidaciones.sumOf { l -> l.totalAPagar }
+                    )
+                }
+            }
+            return
+        }
+
+        // Consulta de estudiante registrado en Supabase / persistencia local
+        viewModelScope.launch {
+            val estudiante = repository.buscarPerfilPorCodigo(codigoLimpio)
+            if (estudiante != null) {
+                val liquidacionesEstudiante = repository.obtenerLiquidacionesPorCodigo(codigoLimpio)
+                val totalEstudiante = liquidacionesEstudiante.sumOf { it.totalAPagar }
+                _uiState.update {
+                    it.copy(
+                        perfilGuardado = estudiante,
+                        campoNombre = estudiante.nombre,
+                        campoCodigo = estudiante.codigo,
+                        facultadSeleccionada = estudiante.facultad,
+                        correoSimulado = estudiante.correoInstitucional,
+                        puedeLiquidar = true,
+                        esUsuarioExistente = true,
+                        esAdmin = false,
+                        esError = false,
+                        mensajeMensajeEstado = "Bienvenido de nuevo, ${estudiante.nombre}",
+                        listaLiquidaciones = liquidacionesEstudiante,
+                        totalAcumulado = totalEstudiante
+                    )
+                }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        esError = true,
+                        esUsuarioExistente = false,
+                        mensajeMensajeEstado = "El código '$codigoLimpio' no está registrado. Regístrate como estudiante nuevo.",
+                        puedeLiquidar = false
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Registro de nuevo estudiante con validación de código único
+     */
     fun guardarPerfil() {
         val currentState = _uiState.value
         val nombre = currentState.campoNombre.trim()
         val codigo = currentState.campoCodigo.trim()
 
         if (nombre.isEmpty() || codigo.isEmpty()) {
+            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "Completa tu nombre y código para continuar") }
+            return
+        }
+
+        if (codigo.equals("ADMIN", ignoreCase = true)) {
+            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "El código 'ADMIN' está reservado") }
             return
         }
 
         viewModelScope.launch {
-            // Validación de unicidad de código de estudiante en Supabase / local
             val perfilExistente = repository.buscarPerfilPorCodigo(codigo)
 
             if (perfilExistente != null) {
-                // El código YA está ocupado: emitir mensaje de error y mantener intacto el nombre ingresado
+                // Código ya ocupado: notificar error y no sobrescribir nombre
                 _uiState.update {
                     it.copy(
                         esError = true,
@@ -109,7 +211,6 @@ class ServiciosViewModel(
                     )
                 }
             } else {
-                // El código NO existe: registrar nuevo perfil y persistir en Supabase
                 val nombreLimpio = nombre.replace(" ", "").lowercase()
                 val codigoLimpio = codigo.replace(" ", "").lowercase()
                 val correo = "$nombreLimpio.$codigoLimpio@uts.edu.co"
@@ -133,6 +234,7 @@ class ServiciosViewModel(
                         correoSimulado = correo,
                         puedeLiquidar = true,
                         esUsuarioExistente = false,
+                        esAdmin = false,
                         esError = false,
                         mensajeMensajeEstado = "Nuevo estudiante registrado: Perfil guardado con éxito",
                         listaLiquidaciones = liquidacionesEstudiante,
@@ -143,12 +245,49 @@ class ServiciosViewModel(
         }
     }
 
-    // Funciones de Módulo 2 (Liquidación de Matrícula)
+    fun cerrarSesion() {
+        repository.limpiarSesionActiva()
+        _uiState.update {
+            it.copy(
+                perfilGuardado = null,
+                campoNombre = "",
+                campoCodigo = "",
+                correoSimulado = "",
+                puedeLiquidar = false,
+                esAdmin = false,
+                esUsuarioExistente = false,
+                esError = false,
+                mensajeMensajeEstado = "Sesión cerrada correctamente",
+                listaLiquidaciones = emptyList(),
+                totalAcumulado = 0.0,
+                modoAuth = ModoAuth.LOGIN
+            )
+        }
+    }
+
+    // --- MÓDULO 2: LIQUIDACIÓN DE MÚLTIPLES CURSOS Y CÁLCULOS ---
+
     fun onCursoSeleccionado(curso: String) {
         _uiState.update {
             it.copy(
                 cursoSeleccionado = curso,
+                cursosSeleccionados = setOf(curso),
                 menuCursoAbierto = false
+            )
+        }
+    }
+
+    fun toggleCursoSeleccionado(curso: String) {
+        _uiState.update { current ->
+            val actual = current.cursosSeleccionados
+            val nuevaSeleccion = if (actual.contains(curso)) {
+                if (actual.size > 1) actual - curso else actual
+            } else {
+                actual + curso
+            }
+            current.copy(
+                cursosSeleccionados = nuevaSeleccion,
+                cursoSeleccionado = nuevaSeleccion.firstOrNull() ?: curso
             )
         }
     }
@@ -165,17 +304,20 @@ class ServiciosViewModel(
         _uiState.update { it.copy(tieneIcetex = tieneIcetex) }
     }
 
+    /**
+     * Liquidación de matrícula para los cursos seleccionados con cálculo de Icetex
+     * deducido tras aplicar el descuento de becas correspondiente.
+     */
     fun liquidarMatricula() {
         val currentState = _uiState.value
         val perfilActual = currentState.perfilGuardado ?: return
-        if (!currentState.puedeLiquidar) {
+        if (!currentState.puedeLiquidar || currentState.cursosSeleccionados.isEmpty()) {
             return
         }
 
-        val costoBase = cursosConCostos[currentState.cursoSeleccionado] ?: 0.0
-        val descuento = if (currentState.tieneBeca) costoBase * 0.5 else 0.0
-        val recargo = if (currentState.tieneIcetex) costoBase * 0.05 else 0.0
-        val totalAPagar = costoBase - descuento + recargo
+        val subtotal = currentState.subtotalBase
+        val totalAPagar = currentState.totalCalculado
+        val cursosNombres = currentState.cursosSeleccionados.joinToString(", ")
 
         val liquidacionesActuales = currentState.listaLiquidaciones
         val todasLasLiquidaciones = repository.obtenerLiquidaciones()
@@ -184,15 +326,14 @@ class ServiciosViewModel(
         val nuevaLiquidacion = LiquidacionMatricula(
             id = nuevoId,
             codigoEstudiante = perfilActual.codigo,
-            cursoLibre = currentState.cursoSeleccionado,
-            costoBase = costoBase,
+            cursoLibre = cursosNombres,
+            costoBase = subtotal,
             tieneBeca = currentState.tieneBeca,
             tieneIcetex = currentState.tieneIcetex,
             totalAPagar = totalAPagar
         )
 
         viewModelScope.launch {
-            // Guardado asíncrono en Supabase
             repository.guardarLiquidacion(nuevaLiquidacion)
 
             val listaActualizada = repository.obtenerLiquidacionesPorCodigo(perfilActual.codigo)
@@ -204,13 +345,20 @@ class ServiciosViewModel(
                     listaLiquidaciones = listaFinal,
                     totalAcumulado = nuevoTotalAcumulado,
                     tieneBeca = false,
-                    tieneIcetex = false
+                    tieneIcetex = false,
+                    mensajeMensajeEstado = "Matrícula liquidada exitosamente por $nuevoTotalAcumulado"
                 )
             }
         }
     }
 
     fun actualizarHistorialPorEstudiante(codigoEstudiante: String? = _uiState.value.perfilGuardado?.codigo) {
+        val currentState = _uiState.value
+        if (currentState.esAdmin) {
+            cargarDatosAdmin()
+            return
+        }
+
         if (codigoEstudiante.isNullOrBlank()) {
             _uiState.update {
                 it.copy(
@@ -231,6 +379,72 @@ class ServiciosViewModel(
                     totalAcumulado = nuevoTotal
                 )
             }
+        }
+    }
+
+    // --- MÓDULO 4: GESTIÓN DE ADMINISTRADOR ---
+
+    fun cargarDatosAdmin() {
+        viewModelScope.launch {
+            val liquidaciones = repository.obtenerTodasLasLiquidaciones()
+            val perfiles = repository.obtenerTodosLosPerfilesRemotos()
+            _uiState.update {
+                it.copy(
+                    todasLasLiquidacionesAdmin = liquidaciones,
+                    todosLosPerfilesAdmin = perfiles,
+                    listaLiquidaciones = liquidaciones,
+                    totalAcumulado = liquidaciones.sumOf { l -> l.totalAPagar }
+                )
+            }
+        }
+    }
+
+    fun agregarCursoLibre(nombre: String, costo: Double) {
+        val nombreLimpio = nombre.trim()
+        if (nombreLimpio.isEmpty() || costo <= 0.0) {
+            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "Nombre y precio válidos requeridos") }
+            return
+        }
+
+        val nuevaOferta = _uiState.value.cursosDisponibles + (nombreLimpio to costo)
+        _uiState.update {
+            it.copy(
+                cursosDisponibles = nuevaOferta,
+                mensajeMensajeEstado = "Curso '$nombreLimpio' agregado a la oferta académica",
+                esError = false
+            )
+        }
+    }
+
+    fun eliminarCursoLibre(nombre: String) {
+        val nuevaOferta = _uiState.value.cursosDisponibles - nombre
+        val nuevaSeleccion = _uiState.value.cursosSeleccionados - nombre
+        _uiState.update {
+            it.copy(
+                cursosDisponibles = nuevaOferta,
+                cursosSeleccionados = if (nuevaSeleccion.isEmpty() && nuevaOferta.isNotEmpty()) setOf(nuevaOferta.keys.first()) else nuevaSeleccion,
+                cursoSeleccionado = nuevaOferta.keys.firstOrNull() ?: "",
+                mensajeMensajeEstado = "Curso '$nombre' eliminado de la oferta",
+                esError = false
+            )
+        }
+    }
+
+    fun actualizarConfiguracionFinanciera(
+        porcentajeBeca: Double,
+        porcentajeIcetex: Double,
+        becaHabilitada: Boolean,
+        icetexHabilitado: Boolean
+    ) {
+        _uiState.update {
+            it.copy(
+                porcentajeBeca = porcentajeBeca.coerceIn(0.0, 1.0),
+                porcentajeIcetex = porcentajeIcetex.coerceIn(0.0, 1.0),
+                becaHabilitada = becaHabilitada,
+                icetexHabilitado = icetexHabilitado,
+                mensajeMensajeEstado = "Parámetros de Becas e Icetex actualizados exitosamente",
+                esError = false
+            )
         }
     }
 }

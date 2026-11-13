@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Receipt
@@ -31,8 +32,10 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -42,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.uts.serviciosestudiantiles.ui.theme.BlancoSuperficie
 import com.uts.serviciosestudiantiles.ui.theme.CremaFondo
@@ -63,13 +67,31 @@ fun MainTabScreen(
     viewModel: ServiciosViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
 
-    val tabs = listOf(
-        TabItem(title = "1. Perfil", icon = Icons.Default.Person),
-        TabItem(title = "2. Matrícula", icon = Icons.Default.Receipt),
-        TabItem(title = "3. Historial", icon = Icons.Default.History)
-    )
+    val tabs = remember(state.esAdmin) {
+        if (state.esAdmin) {
+            listOf(
+                TabItem(title = "1. Perfil", icon = Icons.Default.Person),
+                TabItem(title = "2. Matrícula", icon = Icons.Default.Receipt),
+                TabItem(title = "3. Historial", icon = Icons.Default.History),
+                TabItem(title = "4. Admin", icon = Icons.Default.AdminPanelSettings)
+            )
+        } else {
+            listOf(
+                TabItem(title = "1. Perfil", icon = Icons.Default.Person),
+                TabItem(title = "2. Matrícula", icon = Icons.Default.Receipt),
+                TabItem(title = "3. Historial", icon = Icons.Default.History)
+            )
+        }
+    }
+
+    LaunchedEffect(state.esAdmin) {
+        if (!state.esAdmin && selectedTabIndex > 2) {
+            selectedTabIndex = 0
+        }
+    }
 
     Scaffold(
         modifier = modifier
@@ -108,7 +130,7 @@ fun MainTabScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = "UTS • Portal Financiero",
+                                text = if (state.esAdmin) "UTS • Portal Administrador" else "UTS • Portal Financiero",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = VinoTintoOleo,
@@ -139,12 +161,13 @@ fun MainTabScreen(
                 shadowElevation = 3.dp
             ) {
                 SecondaryTabRow(
-                    selectedTabIndex = selectedTabIndex,
+                    selectedTabIndex = selectedTabIndex.coerceIn(0, tabs.size - 1),
                     containerColor = BlancoSuperficie,
                     contentColor = VinoTintoOleo,
                     indicator = {
+                        val safeIndex = selectedTabIndex.coerceIn(0, tabs.size - 1)
                         TabRowDefaults.SecondaryIndicator(
-                            modifier = Modifier.tabIndicatorOffset(selectedTabIndex),
+                            modifier = Modifier.tabIndicatorOffset(safeIndex),
                             height = 3.dp,
                             color = VinoTintoOleo
                         )
@@ -186,9 +209,10 @@ fun MainTabScreen(
                     .weight(1f)
             ) {
                 when (selectedTabIndex) {
-                    0 -> PerfilScreen(viewModel = viewModel)
+                    0 -> PerfilScreen(viewModel = viewModel, onNavegarAdmin = { selectedTabIndex = 3 })
                     1 -> MatriculaScreen(viewModel = viewModel)
                     2 -> HistorialScreen(viewModel = viewModel)
+                    3 -> AdminScreen(viewModel = viewModel)
                 }
             }
         }

@@ -181,9 +181,13 @@ fun HistorialScreen(
                             color = BlancoSuperficie
                         )
                         Text(
-                            text = state.perfilGuardado?.let {
-                                "Estudiante: ${it.nombre} (Código: ${it.codigo})"
-                            } ?: "Sin estudiante registrado",
+                            text = if (state.esAdmin) {
+                                "Modo Administrador: Consolidado de todos los estudiantes"
+                            } else {
+                                state.perfilGuardado?.let {
+                                    "Estudiante: ${it.nombre} (Código: ${it.codigo})"
+                                } ?: "Sin sesión activa"
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = BlancoSuperficie.copy(alpha = 0.8f)
                         )
@@ -198,7 +202,7 @@ fun HistorialScreen(
                     )
 
                     Text(
-                        text = "Liquidaciones registradas para el estudiante actual",
+                        text = if (state.esAdmin) "Total institucional consolidado en el sistema" else "Liquidaciones registradas para el estudiante actual",
                         style = MaterialTheme.typography.bodySmall,
                         color = BlancoSuperficie.copy(alpha = 0.75f)
                     )
