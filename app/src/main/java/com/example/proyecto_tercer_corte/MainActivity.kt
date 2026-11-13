@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.uts.serviciosestudiantiles.ui.MainTabScreen
+import com.uts.serviciosestudiantiles.ui.MainDrawerScreen
 import com.uts.serviciosestudiantiles.ui.theme.UTSTheme
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             UTSTheme {
-                MainTabScreen()
+                MainDrawerScreen()
             }
         }
     }

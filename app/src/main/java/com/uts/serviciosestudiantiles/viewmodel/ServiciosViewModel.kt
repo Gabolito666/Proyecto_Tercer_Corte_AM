@@ -2,6 +2,8 @@ package com.uts.serviciosestudiantiles.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.uts.serviciosestudiantiles.data.Beca
+import com.uts.serviciosestudiantiles.data.CursoLibre
 import com.uts.serviciosestudiantiles.data.LiquidacionMatricula
 import com.uts.serviciosestudiantiles.data.PerfilEstudiante
 import com.uts.serviciosestudiantiles.data.ServiciosRepository
@@ -43,6 +45,7 @@ class ServiciosViewModel(
     init {
         cargarDatosPersistidos()
         cargarCursosRemotos()
+        cargarBecasRemotas()
     }
 
     private fun cargarCursosRemotos() {
@@ -53,6 +56,15 @@ class ServiciosViewModel(
                 _uiState.update { current ->
                     current.copy(cursosDisponibles = current.cursosDisponibles + mapa)
                 }
+            }
+        }
+    }
+
+    fun cargarBecasRemotas() {
+        viewModelScope.launch {
+            val becas = repository.obtenerBecasRemotas()
+            _uiState.update { current ->
+                current.copy(becasDisponibles = becas)
             }
         }
     }
@@ -72,6 +84,7 @@ class ServiciosViewModel(
                         correoSimulado = ultimoPerfil.correoInstitucional,
                         puedeLiquidar = true,
                         esUsuarioExistente = true,
+                        esAdmin = ultimoPerfil.codigo.equals("ADMIN", ignoreCase = true),
                         mensajeMensajeEstado = "Sesión cargada: Datos e historial restaurados",
                         listaLiquidaciones = liquidaciones,
                         totalAcumulado = total
@@ -81,7 +94,7 @@ class ServiciosViewModel(
         }
     }
 
-    // --- MÓDULO 1: AUTENTICACIÓN (LOGIN, REGISTRO Y ADMINISTRADOR) ---
+    // --- MÓDULO 1: AUTENTICACIÓN (LOGIN, REGISTRO Y GESTIÓN DE ROLES) ---
 
     fun setModoAuth(modo: ModoAuth) {
         _uiState.update {
@@ -93,12 +106,31 @@ class ServiciosViewModel(
         }
     }
 
+    fun onRolAuthCambiado(rol: RolUsuario) {
+        _uiState.update {
+            it.copy(
+                rolAuthSeleccionado = rol,
+                mensajeMensajeEstado = null,
+                esError = false,
+                campoCodigo = if (rol == RolUsuario.ADMINISTRADOR) "ADMIN" else if (it.campoCodigo == "ADMIN") "" else it.campoCodigo
+            )
+        }
+    }
+
     fun onNombreCambiado(nombre: String) {
         _uiState.update { it.copy(campoNombre = nombre, mensajeMensajeEstado = null, esError = false) }
     }
 
     fun onCodigoCambiado(codigo: String) {
         _uiState.update { it.copy(campoCodigo = codigo, mensajeMensajeEstado = null, esError = false) }
+    }
+
+    fun onPasswordCambiado(password: String) {
+        _uiState.update { it.copy(campoPassword = password, mensajeMensajeEstado = null, esError = false) }
+    }
+
+    fun togglePasswordVisible() {
+        _uiState.update { it.copy(passwordVisible = !it.passwordVisible) }
     }
 
     fun onFacultadSeleccionada(facultad: String) {
@@ -115,17 +147,22 @@ class ServiciosViewModel(
     }
 
     /**
-     * Iniciar sesión para estudiantes registrados o perfil de Administrador (código "ADMIN")
+     * Iniciar sesión para estudiantes registrados o Administrador del sistema.
      */
-    fun iniciarSesion(codigoIngresado: String = _uiState.value.campoCodigo) {
+    fun iniciarSesion(
+        codigoIngresado: String = _uiState.value.campoCodigo,
+        passwordIngresado: String = _uiState.value.campoPassword
+    ) {
         val codigoLimpio = codigoIngresado.trim()
+        val rolActual = _uiState.value.rolAuthSeleccionado
+
         if (codigoLimpio.isEmpty()) {
-            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "Por favor ingresa un código estudiantil") }
+            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "Por favor ingresa tu código de acceso o credenciales") }
             return
         }
 
         // Acceso especial como Administrador institucional
-        if (codigoLimpio.equals("ADMIN", ignoreCase = true)) {
+        if (rolActual == RolUsuario.ADMINISTRADOR || codigoLimpio.equals("ADMIN", ignoreCase = true)) {
             val adminPerfil = PerfilEstudiante(
                 id = 0,
                 nombre = "Administrador UTS",
@@ -136,19 +173,22 @@ class ServiciosViewModel(
             viewModelScope.launch {
                 val todasLasLiquidaciones = repository.obtenerTodasLasLiquidaciones()
                 val todosLosPerfiles = repository.obtenerTodosLosPerfilesRemotos()
+                val becas = repository.obtenerBecasRemotas()
                 _uiState.update {
                     it.copy(
                         esAdmin = true,
                         perfilGuardado = adminPerfil,
                         campoNombre = adminPerfil.nombre,
                         campoCodigo = adminPerfil.codigo,
+                        campoPassword = "",
                         correoSimulado = adminPerfil.correoInstitucional,
-                        puedeLiquidar = true,
+                        puedeLiquidar = false, // El administrador no realiza liquidaciones para sí mismo
                         esUsuarioExistente = true,
                         esError = false,
-                        mensajeMensajeEstado = "Sesión iniciada como Administrador del Sistema",
+                        mensajeMensajeEstado = "Sesión iniciada como Administrador del Sistema UTS",
                         todasLasLiquidacionesAdmin = todasLasLiquidaciones,
                         todosLosPerfilesAdmin = todosLosPerfiles,
+                        becasDisponibles = becas,
                         listaLiquidaciones = todasLasLiquidaciones,
                         totalAcumulado = todasLasLiquidaciones.sumOf { l -> l.totalAPagar }
                     )
@@ -168,6 +208,7 @@ class ServiciosViewModel(
                         perfilGuardado = estudiante,
                         campoNombre = estudiante.nombre,
                         campoCodigo = estudiante.codigo,
+                        campoPassword = "",
                         facultadSeleccionada = estudiante.facultad,
                         correoSimulado = estudiante.correoInstitucional,
                         puedeLiquidar = true,
@@ -206,7 +247,7 @@ class ServiciosViewModel(
         }
 
         if (codigo.equals("ADMIN", ignoreCase = true)) {
-            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "El código 'ADMIN' está reservado") }
+            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "El código 'ADMIN' está reservado para el Administrador") }
             return
         }
 
@@ -249,6 +290,7 @@ class ServiciosViewModel(
                         esUsuarioExistente = false,
                         esAdmin = false,
                         esError = false,
+                        campoPassword = "",
                         mensajeMensajeEstado = "Nuevo estudiante registrado: Perfil guardado con éxito",
                         listaLiquidaciones = liquidacionesEstudiante,
                         totalAcumulado = totalEstudiante
@@ -265,6 +307,7 @@ class ServiciosViewModel(
                 perfilGuardado = null,
                 campoNombre = "",
                 campoCodigo = "",
+                campoPassword = "",
                 correoSimulado = "",
                 puedeLiquidar = false,
                 esAdmin = false,
@@ -273,7 +316,8 @@ class ServiciosViewModel(
                 mensajeMensajeEstado = "Sesión cerrada correctamente",
                 listaLiquidaciones = emptyList(),
                 totalAcumulado = 0.0,
-                modoAuth = ModoAuth.LOGIN
+                modoAuth = ModoAuth.LOGIN,
+                rolAuthSeleccionado = RolUsuario.ESTUDIANTE
             )
         }
     }
@@ -395,20 +439,81 @@ class ServiciosViewModel(
         }
     }
 
-    // --- MÓDULO 4: GESTIÓN DE ADMINISTRADOR ---
+    // --- MÓDULO 3: GESTIÓN DE ADMINISTRADOR Y CREACIÓN DE BECAS ---
 
     fun cargarDatosAdmin() {
         viewModelScope.launch {
             val liquidaciones = repository.obtenerTodasLasLiquidaciones()
             val perfiles = repository.obtenerTodosLosPerfilesRemotos()
+            val becas = repository.obtenerBecasRemotas()
             _uiState.update {
                 it.copy(
                     todasLasLiquidacionesAdmin = liquidaciones,
                     todosLosPerfilesAdmin = perfiles,
+                    becasDisponibles = becas,
                     listaLiquidaciones = liquidaciones,
                     totalAcumulado = liquidaciones.sumOf { l -> l.totalAPagar }
                 )
             }
+        }
+    }
+
+    fun crearBeca(nombre: String, porcentaje: Double, requisitos: String) {
+        val nombreLimpio = nombre.trim()
+        val requisitosLimpios = requisitos.trim()
+        if (nombreLimpio.isEmpty()) {
+            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "Ingresa el nombre de la beca") }
+            return
+        }
+        if (porcentaje <= 0.0 || porcentaje > 1.0) {
+            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "El descuento debe ser entre 1% y 100%") }
+            return
+        }
+
+        viewModelScope.launch {
+            val nuevoId = repository.obtenerSiguienteIdBeca()
+            val nuevaBeca = Beca(
+                id = nuevoId,
+                nombre = nombreLimpio,
+                porcentajeDescuento = porcentaje,
+                requisitos = if (requisitosLimpios.isNotEmpty()) requisitosLimpios else "Sin requisitos específicos",
+                activa = true
+            )
+            repository.guardarBecaRemoto(nuevaBeca)
+            val becasActualizadas = repository.obtenerBecasRemotas()
+            _uiState.update {
+                it.copy(
+                    becasDisponibles = becasActualizadas,
+                    porcentajeBeca = porcentaje,
+                    mensajeMensajeEstado = "Beca '$nombreLimpio' creada y guardada exitosamente (${(porcentaje * 100).toInt()}%)",
+                    esError = false
+                )
+            }
+        }
+    }
+
+    fun eliminarBeca(id: Int) {
+        viewModelScope.launch {
+            repository.eliminarBecaRemoto(id)
+            val becasActualizadas = repository.obtenerBecasRemotas()
+            _uiState.update {
+                it.copy(
+                    becasDisponibles = becasActualizadas,
+                    mensajeMensajeEstado = "Beca eliminada correctamente",
+                    esError = false
+                )
+            }
+        }
+    }
+
+    fun seleccionarBeca(id: Int?) {
+        _uiState.update { current ->
+            val beca = current.becasDisponibles.firstOrNull { it.id == id }
+            current.copy(
+                becaSeleccionadaId = id,
+                porcentajeBeca = beca?.porcentajeDescuento ?: current.porcentajeBeca,
+                tieneBeca = id != null
+            )
         }
     }
 
@@ -430,7 +535,7 @@ class ServiciosViewModel(
 
         viewModelScope.launch {
             repository.guardarCursoRemoto(
-                com.uts.serviciosestudiantiles.data.CursoLibre(
+                CursoLibre(
                     id = (repository.obtenerCursosRemotos().maxOfOrNull { it.id } ?: 0) + 1,
                     nombre = nombreLimpio,
                     costoBase = costo

@@ -1,5 +1,6 @@
 package com.uts.serviciosestudiantiles.viewmodel
 
+import com.uts.serviciosestudiantiles.data.Beca
 import com.uts.serviciosestudiantiles.data.LiquidacionMatricula
 import com.uts.serviciosestudiantiles.data.PerfilEstudiante
 
@@ -8,9 +9,17 @@ enum class ModoAuth {
     REGISTRO
 }
 
+enum class RolUsuario {
+    ESTUDIANTE,
+    ADMINISTRADOR
+}
+
 data class ServiciosUiState(
     val campoNombre: String = "",
     val campoCodigo: String = "",
+    val campoPassword: String = "",
+    val passwordVisible: Boolean = false,
+    val rolAuthSeleccionado: RolUsuario = RolUsuario.ESTUDIANTE,
     val facultadSeleccionada: String = "Ingenierías",
     val menuFacultadAbierto: Boolean = false,
     val perfilGuardado: PerfilEstudiante? = null,
@@ -27,6 +36,8 @@ data class ServiciosUiState(
     val becaHabilitada: Boolean = true,
     val icetexHabilitado: Boolean = true,
     val puedeLiquidar: Boolean = false,
+    val becasDisponibles: List<Beca> = emptyList(),
+    val becaSeleccionadaId: Int? = null,
     val listaLiquidaciones: List<LiquidacionMatricula> = emptyList(),
     val todasLasLiquidacionesAdmin: List<LiquidacionMatricula> = emptyList(),
     val todosLosPerfilesAdmin: List<PerfilEstudiante> = emptyList(),
@@ -44,6 +55,9 @@ data class ServiciosUiState(
         "Ciencia de Datos con Python" to 480000.0
     )
 ) {
+    val rolUsuario: RolUsuario
+        get() = if (esAdmin) RolUsuario.ADMINISTRADOR else RolUsuario.ESTUDIANTE
+
     val mensajeEstado: String? get() = mensajeMensajeEstado
 
     // Cálculo matemático: el crédito del Icetex se aplica tras deducir los descuentos correspondientes

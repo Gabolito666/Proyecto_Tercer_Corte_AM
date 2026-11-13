@@ -154,7 +154,21 @@ class ServiciosViewModelTest {
         var state = viewModel.uiState.value
         assertTrue(state.esAdmin)
         assertEquals("Administrador UTS", state.perfilGuardado?.nombre)
-        assertTrue(state.puedeLiquidar)
+        assertFalse(state.puedeLiquidar) // Segregación de roles: el administrador no realiza liquidaciones
+
+        // Gestionar creación de becas
+        viewModel.crearBeca("Beca Santander Tech", 0.45, "Promedio > 4.2")
+        advanceUntilIdle()
+        state = viewModel.uiState.value
+        assertTrue(state.becasDisponibles.any { it.nombre == "Beca Santander Tech" })
+        val becaCreada = state.becasDisponibles.first { it.nombre == "Beca Santander Tech" }
+        assertEquals(0.45, becaCreada.porcentajeDescuento, 0.01)
+
+        // Eliminar beca
+        viewModel.eliminarBeca(becaCreada.id)
+        advanceUntilIdle()
+        state = viewModel.uiState.value
+        assertFalse(state.becasDisponibles.any { it.nombre == "Beca Santander Tech" })
 
         // Gestionar cursos libres: agregar nuevo curso
         viewModel.agregarCursoLibre("Robótica y Automatización", 620000.0)

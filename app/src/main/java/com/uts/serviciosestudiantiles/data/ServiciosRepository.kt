@@ -17,6 +17,11 @@ class ServiciosRepository(
     // Almacenamiento local en memoria como fallback y cache
     private val perfilesLocales = mutableMapOf<String, PerfilEstudiante>()
     private val liquidacionesLocales = mutableListOf<LiquidacionMatricula>()
+    private val becasLocales = mutableListOf(
+        Beca(id = 1, nombre = "Beca de Excelencia Académica", porcentajeDescuento = 0.50, requisitos = "Promedio acumulado mínimo de 4.5 en el semestre anterior."),
+        Beca(id = 2, nombre = "Beca Deportiva y Cultural UTS", porcentajeDescuento = 0.35, requisitos = "Pertenecer a una selección deportiva o grupo cultural oficial."),
+        Beca(id = 3, nombre = "Beca de Honor Santander", porcentajeDescuento = 0.70, requisitos = "Primer puesto en pruebas de estado Saber Pro o de cohorte.")
+    )
     private var perfilActivo: PerfilEstudiante? = null
 
     private val isConfigured: Boolean
@@ -167,6 +172,63 @@ class ServiciosRepository(
                     client.from("cursos").delete {
                         filter {
                             eq("nombre", nombre)
+                        }
+                    }
+                }.getOrNull()
+            }
+        }
+    }
+
+    suspend fun obtenerSiguienteIdBeca(): Int {
+        val todas = obtenerBecasRemotas()
+        val maxId = todas.maxOfOrNull { it.id } ?: becasLocales.maxOfOrNull { it.id } ?: 0
+        return maxId + 1
+    }
+
+    suspend fun obtenerBecasRemotas(): List<Beca> {
+        if (isConfigured) {
+            val remotas = withContext(ioDispatcher) {
+                runCatching {
+                    client.from("becas")
+                        .select()
+                        .decodeList<Beca>()
+                }.getOrNull()
+            }
+            if (remotas != null && remotas.isNotEmpty()) {
+                remotas.forEach { remota ->
+                    val idx = becasLocales.indexOfFirst { it.id == remota.id || it.nombre.equals(remota.nombre, ignoreCase = true) }
+                    if (idx >= 0) becasLocales[idx] = remota else becasLocales.add(remota)
+                }
+                return remotas
+            }
+        }
+        return becasLocales.toList()
+    }
+
+    suspend fun guardarBecaRemoto(beca: Beca) {
+        val idx = becasLocales.indexOfFirst { it.id == beca.id || it.nombre.equals(beca.nombre, ignoreCase = true) }
+        if (idx >= 0) becasLocales[idx] = beca else becasLocales.add(beca)
+
+        if (isConfigured) {
+            withContext(ioDispatcher) {
+                runCatching {
+                    client.from("becas").upsert(beca) {
+                        onConflict = "nombre"
+                    }
+                }.getOrNull()
+            }
+        }
+    }
+
+    suspend fun eliminarBecaRemoto(id: Int) {
+        becasLocales.removeAll { it.id == id }
+
+        if (isConfigured) {
+            withContext(ioDispatcher) {
+                runCatching {
+                    client.from("becas").delete {
+                        filter {
+                            eq("id", id)
                         }
                     }
                 }.getOrNull()

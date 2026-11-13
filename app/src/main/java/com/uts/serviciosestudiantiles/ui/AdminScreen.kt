@@ -24,11 +24,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -39,7 +41,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -61,13 +62,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uts.serviciosestudiantiles.ui.theme.BlancoSuperficie
 import com.uts.serviciosestudiantiles.ui.theme.CremaFondo
 import com.uts.serviciosestudiantiles.ui.theme.GrisPlata
-import com.uts.serviciosestudiantiles.ui.theme.GrisPlataMate
 import com.uts.serviciosestudiantiles.ui.theme.GrisTextoSecundario
 import com.uts.serviciosestudiantiles.ui.theme.MagentaOleo
 import com.uts.serviciosestudiantiles.ui.theme.MagentaOleoClaro
@@ -82,20 +83,26 @@ import java.util.Locale
 @Composable
 fun AdminScreen(
     viewModel: ServiciosViewModel,
+    seccionInicial: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var selectedSection by rememberSaveable { mutableIntStateOf(0) }
+    var selectedSection by rememberSaveable { mutableIntStateOf(seccionInicial) }
+
+    LaunchedEffect(seccionInicial) {
+        selectedSection = seccionInicial
+    }
 
     LaunchedEffect(Unit) {
         viewModel.cargarDatosAdmin()
+        viewModel.cargarBecasRemotas()
     }
 
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-CO")).apply {
         maximumFractionDigits = 0
     }
 
-    val sections = listOf("Cursos Libres", "Becas / Icetex", "Estudiantes", "Liquidaciones")
+    val sections = listOf("Gestión de Becas", "Liquidaciones Globales", "Cursos Libres", "Estudiantes")
 
     Box(
         modifier = modifier
@@ -130,13 +137,13 @@ fun AdminScreen(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Panel de Administración",
+                        text = "Panel de Administración UTS",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
                         color = NegroTexto
                     )
                     Text(
-                        text = "Gestión institucional de cursos, usuarios y finanzas UTS",
+                        text = "Gestión institucional de becas, cursos y liquidaciones",
                         style = MaterialTheme.typography.bodySmall,
                         color = GrisTextoSecundario
                     )
@@ -173,7 +180,9 @@ fun AdminScreen(
                                     text = title,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) VinoTintoOleo else GrisTextoSecundario
+                                    color = if (isSelected) VinoTintoOleo else GrisTextoSecundario,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         )
@@ -183,15 +192,233 @@ fun AdminScreen(
 
             // Contenido dinámico según la sección seleccionada
             when (selectedSection) {
-                0 -> SeccionGestionCursos(viewModel, currencyFormat)
-                1 -> SeccionGestionFinanciera(viewModel, state)
-                2 -> SeccionListaEstudiantes(state)
-                3 -> SeccionTodasLasLiquidaciones(state, currencyFormat)
+                0 -> SeccionGestionBecas(viewModel)
+                1 -> SeccionTodasLasLiquidaciones(state, currencyFormat)
+                2 -> SeccionGestionCursos(viewModel, currencyFormat)
+                3 -> SeccionListaEstudiantes(state)
             }
         }
     }
 }
 
+// --- SUB-MÓDULO: CREACIÓN Y GESTIÓN DE BECAS INSTITUCIONALES ---
+@Composable
+private fun SeccionGestionBecas(
+    viewModel: ServiciosViewModel
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var nombreBeca by remember { mutableStateOf("") }
+    var requisitosBeca by remember { mutableStateOf("") }
+    var porcentajeBecaSlider by remember { mutableIntStateOf(50) }
+
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        // Tarjeta para Crear Nueva Beca
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
+            border = BorderStroke(1.dp, GrisPlata),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CardGiftcard,
+                        contentDescription = null,
+                        tint = VinoTintoOleo,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Crear Nueva Beca Institucional",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = NegroTexto
+                    )
+                }
+
+                Text(
+                    text = "Define programas de descuento y estímulo económico para estudiantes UTS.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = GrisTextoSecundario
+                )
+
+                HorizontalDivider(color = GrisPlata)
+
+                OutlinedTextField(
+                    value = nombreBeca,
+                    onValueChange = { nombreBeca = it },
+                    label = { Text("Nombre de la Beca") },
+                    placeholder = { Text("Ej. Beca Talento Santander") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp)
+                )
+
+                OutlinedTextField(
+                    value = requisitosBeca,
+                    onValueChange = { requisitosBeca = it },
+                    label = { Text("Requisitos Académicos") },
+                    placeholder = { Text("Ej. Promedio ponderado mínimo 4.2 y estrato 1 o 2") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp)
+                )
+
+                // Slider interactivo de porcentaje de descuento
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Porcentaje de Descuento:",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = NegroTexto
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = VerdeOpaloClaro
+                        ) {
+                            Text(
+                                text = "$porcentajeBecaSlider%",
+                                fontWeight = FontWeight.ExtraBold,
+                                color = NegroTexto,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    Slider(
+                        value = porcentajeBecaSlider.toFloat(),
+                        onValueChange = { porcentajeBecaSlider = it.toInt() },
+                        valueRange = 5f..100f,
+                        steps = 18,
+                        colors = SliderDefaults.colors(
+                            thumbColor = VerdeOpalo,
+                            activeTrackColor = VerdeOpalo
+                        )
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        if (nombreBeca.isNotBlank()) {
+                            viewModel.crearBeca(
+                                nombre = nombreBeca,
+                                porcentaje = porcentajeBecaSlider / 100.0,
+                                requisitos = requisitosBeca
+                            )
+                            nombreBeca = ""
+                            requisitosBeca = ""
+                            porcentajeBecaSlider = 50
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(containerColor = VinoTintoOleo)
+                ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = VerdeOpalo)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Crear y Guardar Beca en Supabase", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        // Listado de Becas Registradas
+        Text(
+            text = "Becas Institucionales Disponibles (${state.becasDisponibles.size})",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = NegroTexto
+        )
+
+        if (state.becasDisponibles.isEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
+                border = BorderStroke(1.dp, GrisPlata)
+            ) {
+                Box(modifier = Modifier.padding(20.dp), contentAlignment = Alignment.Center) {
+                    Text("No hay becas registradas todavía.", color = GrisTextoSecundario)
+                }
+            }
+        } else {
+            state.becasDisponibles.forEach { beca ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
+                    border = BorderStroke(1.dp, GrisPlata)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = beca.nombre,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = NegroTexto
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(50),
+                                    color = VerdeOpaloClaro
+                                ) {
+                                    Text(
+                                        text = "${(beca.porcentajeDescuento * 100).toInt()}% DESC",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = NegroTexto,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Requisitos: ${beca.requisitos}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GrisTextoSecundario
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { viewModel.eliminarBeca(beca.id) }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Eliminar beca",
+                                tint = MagentaOleo
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// --- SUB-MÓDULO: GESTIÓN DE CURSOS LIBRES ---
 @Composable
 private fun SeccionGestionCursos(
     viewModel: ServiciosViewModel,
@@ -209,7 +436,6 @@ private fun SeccionGestionCursos(
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Tarjeta para añadir nuevo curso
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -273,7 +499,6 @@ private fun SeccionGestionCursos(
             }
         }
 
-        // Listado de cursos ofertados actualmente
         Text(
             text = "Cursos Ofertados (${state.cursosDisponibles.size})",
             style = MaterialTheme.typography.titleMedium,
@@ -325,129 +550,7 @@ private fun SeccionGestionCursos(
     }
 }
 
-@Composable
-private fun SeccionGestionFinanciera(
-    viewModel: ServiciosViewModel,
-    state: com.uts.serviciosestudiantiles.viewmodel.ServiciosUiState
-) {
-    var becaPorcentaje by remember(state.porcentajeBeca) { mutableStateOf((state.porcentajeBeca * 100).toInt()) }
-    var icetexPorcentaje by remember(state.porcentajeIcetex) { mutableStateOf((state.porcentajeIcetex * 100).toInt()) }
-    var becaHabilitada by remember(state.becaHabilitada) { mutableStateOf(state.becaHabilitada) }
-    var icetexHabilitado by remember(state.icetexHabilitado) { mutableStateOf(state.icetexHabilitado) }
-
-    val scrollState = rememberScrollState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
-            border = BorderStroke(1.dp, GrisPlata),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Tune, contentDescription = null, tint = VinoTintoOleo)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Configuración de Becas e Icetex",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = NegroTexto
-                    )
-                }
-
-                HorizontalDivider(color = GrisPlata)
-
-                // Control de Beca
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("Beca de Excelencia", fontWeight = FontWeight.Bold, color = NegroTexto)
-                        Text("Porcentaje de descuento: $becaPorcentaje%", color = GrisTextoSecundario, style = MaterialTheme.typography.bodySmall)
-                    }
-                    Switch(
-                        checked = becaHabilitada,
-                        onCheckedChange = { becaHabilitada = it },
-                        colors = SwitchDefaults.colors(checkedTrackColor = VerdeOpalo)
-                    )
-                }
-
-                Slider(
-                    value = becaPorcentaje.toFloat(),
-                    onValueChange = { becaPorcentaje = it.toInt() },
-                    valueRange = 10f..90f,
-                    steps = 7,
-                    colors = SliderDefaults.colors(thumbColor = VerdeOpalo, activeTrackColor = VerdeOpalo)
-                )
-
-                HorizontalDivider(color = GrisPlata)
-
-                // Control de Icetex
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("Crédito Icetex", fontWeight = FontWeight.Bold, color = NegroTexto)
-                        Text("Recargo administrativo: $icetexPorcentaje%", color = GrisTextoSecundario, style = MaterialTheme.typography.bodySmall)
-                    }
-                    Switch(
-                        checked = icetexHabilitado,
-                        onCheckedChange = { icetexHabilitado = it },
-                        colors = SwitchDefaults.colors(checkedTrackColor = MagentaOleo)
-                    )
-                }
-
-                Slider(
-                    value = icetexPorcentaje.toFloat(),
-                    onValueChange = { icetexPorcentaje = it.toInt() },
-                    valueRange = 1f..20f,
-                    steps = 18,
-                    colors = SliderDefaults.colors(thumbColor = MagentaOleo, activeTrackColor = MagentaOleo)
-                )
-
-                Text(
-                    text = "Nota de cálculo: El recargo de Icetex se aplica sobre la base neta posterior a descuentos.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = VinoTintoOleo,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                Button(
-                    onClick = {
-                        viewModel.actualizarConfiguracionFinanciera(
-                            porcentajeBeca = becaPorcentaje / 100.0,
-                            porcentajeIcetex = icetexPorcentaje / 100.0,
-                            becaHabilitada = becaHabilitada,
-                            icetexHabilitado = icetexHabilitado
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = VinoTintoOleo)
-                ) {
-                    Text("Aplicar Parámetros Financieros", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-    }
-}
-
+// --- SUB-MÓDULO: LISTA DE ESTUDIANTES REGISTRADOS ---
 @Composable
 private fun SeccionListaEstudiantes(
     state: com.uts.serviciosestudiantiles.viewmodel.ServiciosUiState
@@ -522,6 +625,7 @@ private fun SeccionListaEstudiantes(
     }
 }
 
+// --- SUB-MÓDULO: LIQUIDACIONES GLOBALES ---
 @Composable
 private fun SeccionTodasLasLiquidaciones(
     state: com.uts.serviciosestudiantiles.viewmodel.ServiciosUiState,
@@ -533,7 +637,7 @@ private fun SeccionTodasLasLiquidaciones(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Tarjeta resumen recaudación institucional
+        // Resumen institucional
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -556,7 +660,7 @@ private fun SeccionTodasLasLiquidaciones(
                     color = BlancoSuperficie
                 )
                 Text(
-                    text = "${state.todasLasLiquidacionesAdmin.size} transacciones registradas",
+                    text = "${state.todasLasLiquidacionesAdmin.size} transacciones registradas en Supabase",
                     style = MaterialTheme.typography.bodySmall,
                     color = VerdeOpalo
                 )
