@@ -380,6 +380,14 @@ class ServiciosViewModel(
 
         viewModelScope.launch {
             val nuevoId = repository.obtenerSiguienteIdLiquidacion()
+            val todosCursos = repository.obtenerCursosRemotos()
+            val primerCursoId = if (currentState.cursosSeleccionados.size == 1) {
+                todosCursos.firstOrNull { it.nombre.equals(currentState.cursosSeleccionados.first(), ignoreCase = true) }?.id
+            } else null
+
+            val becaAsociadaId = if (currentState.tieneBeca) {
+                currentState.becaSeleccionadaId ?: repository.obtenerBecasRemotas().firstOrNull()?.id ?: 1
+            } else null
 
             val nuevaLiquidacion = LiquidacionMatricula(
                 id = nuevoId,
@@ -388,7 +396,9 @@ class ServiciosViewModel(
                 costoBase = subtotal,
                 tieneBeca = currentState.tieneBeca,
                 tieneIcetex = currentState.tieneIcetex,
-                totalAPagar = totalAPagar
+                totalAPagar = totalAPagar,
+                cursoId = primerCursoId,
+                becaId = becaAsociadaId
             )
 
             repository.guardarLiquidacion(nuevaLiquidacion)

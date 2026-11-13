@@ -97,6 +97,27 @@ class ServiciosRepository(
                 runCatching {
                     client.from("liquidaciones").insert(liquidacion)
                 }.getOrNull()
+
+                runCatching {
+                    val todosCursos = obtenerCursosRemotos()
+                    val nombresCursos = liquidacion.cursoLibre.split(",").map { it.trim() }
+                    for (nombreCurso in nombresCursos) {
+                        val curso = todosCursos.firstOrNull { it.nombre.equals(nombreCurso, ignoreCase = true) }
+                        if (curso != null) {
+                            @kotlinx.serialization.Serializable
+                            data class RelacionLiqCurso(
+                                val liquidacion_id: Int,
+                                val curso_id: Int
+                            )
+                            client.from("liquidaciones_cursos").upsert(
+                                RelacionLiqCurso(
+                                    liquidacion_id = liquidacion.id,
+                                    curso_id = curso.id
+                                )
+                            )
+                        }
+                    }
+                }.getOrNull()
             }
         }
     }

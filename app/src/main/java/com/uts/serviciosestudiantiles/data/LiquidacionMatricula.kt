@@ -11,5 +11,7 @@ data class LiquidacionMatricula(
     @SerialName("costo_base") val costoBase: Double = 0.0,
     @SerialName("tiene_beca") val tieneBeca: Boolean = false,
     @SerialName("tiene_icetex") val tieneIcetex: Boolean = false,
-    @SerialName("total_a_pagar") val totalAPagar: Double = 0.0
+    @SerialName("total_a_pagar") val totalAPagar: Double = 0.0,
+    @SerialName("curso_id") val cursoId: Int? = null,
+    @SerialName("beca_id") val becaId: Int? = null
 )
