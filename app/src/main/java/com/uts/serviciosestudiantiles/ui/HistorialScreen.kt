@@ -46,7 +46,6 @@ import com.uts.serviciosestudiantiles.ui.theme.CremaFondo
 import com.uts.serviciosestudiantiles.ui.theme.GrisPlata
 import com.uts.serviciosestudiantiles.ui.theme.GrisTextoSecundario
 import com.uts.serviciosestudiantiles.ui.theme.MagentaOleo
-import com.uts.serviciosestudiantiles.ui.theme.MagentaOleoClaro
 import com.uts.serviciosestudiantiles.ui.theme.NegroTexto
 import com.uts.serviciosestudiantiles.ui.theme.VerdeOpalo
 import com.uts.serviciosestudiantiles.ui.theme.VerdeOpaloClaro
@@ -62,6 +61,11 @@ fun HistorialScreen(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Garantizar que al abrir la pestaña o cambiar de perfil se actualice leyendo la persistencia local
+    androidx.compose.runtime.LaunchedEffect(state.perfilGuardado?.codigo) {
+        viewModel.actualizarHistorialPorEstudiante()
+    }
 
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-CO")).apply {
         maximumFractionDigits = 0
@@ -109,83 +113,95 @@ fun HistorialScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .padding(horizontal = 22.dp, vertical = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // Fila superior: Ícono de billetera y badges flotantes alineados a la derecha
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                shape = CircleShape,
-                                color = BlancoSuperficie.copy(alpha = 0.15f),
-                                modifier = Modifier.size(38.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.AccountBalanceWallet,
-                                        contentDescription = null,
-                                        tint = VerdeOpalo,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
+                        Surface(
+                            shape = CircleShape,
+                            color = BlancoSuperficie.copy(alpha = 0.15f),
+                            modifier = Modifier.size(42.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.AccountBalanceWallet,
+                                    contentDescription = null,
+                                    tint = VerdeOpalo,
+                                    modifier = Modifier.size(22.dp)
+                                )
                             }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = "Total Acumulado Financiero",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = BlancoSuperficie.copy(alpha = 0.9f)
-                            )
                         }
 
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = BlancoSuperficie.copy(alpha = 0.15f)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "UTS Pay",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = VerdeOpalo,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                            )
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = BlancoSuperficie.copy(alpha = 0.15f)
+                            ) {
+                                Text(
+                                    text = "UTS Pay",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = VerdeOpalo,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                )
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = VerdeOpalo
+                            ) {
+                                Text(
+                                    text = "${state.listaLiquidaciones.size} reg.",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = VinoTintoOscuro,
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                                )
+                            }
                         }
+                    }
+
+                    // Título reorganizado en una Column con espacio horizontal completo para evitar colisiones
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Text(
+                            text = "Total Acumulado Financiero",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = BlancoSuperficie
+                        )
+                        Text(
+                            text = state.perfilGuardado?.let {
+                                "Estudiante: ${it.nombre} (Código: ${it.codigo})"
+                            } ?: "Sin estudiante registrado",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = BlancoSuperficie.copy(alpha = 0.8f)
+                        )
                     }
 
                     // Acento en VerdeOpalo para el total acumulado
                     Text(
                         text = currencyFormat.format(state.totalAcumulado),
-                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
+                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 36.sp),
                         fontWeight = FontWeight.ExtraBold,
                         color = VerdeOpalo
                     )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Liquidaciones acumuladas en el período",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = BlancoSuperficie.copy(alpha = 0.75f)
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = VerdeOpalo
-                        ) {
-                            Text(
-                                text = "${state.listaLiquidaciones.size} reg.",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = VinoTintoOscuro,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
+                    Text(
+                        text = "Liquidaciones registradas para el estudiante actual",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = BlancoSuperficie.copy(alpha = 0.75f)
+                    )
                 }
             }
 
@@ -248,14 +264,16 @@ fun HistorialScreen(
                             }
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "Sin liquidaciones todavía",
+                                text = "Sin liquidaciones registradas",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = NegroTexto
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Guarda tu perfil y liquida cursos libres en la pestaña '2. Matrícula' para visualizar los comprobantes aquí.",
+                                text = state.perfilGuardado?.let {
+                                    "No hay registros financieros para ${it.nombre} (Código: ${it.codigo}). Liquida un curso libre en la pestaña '2. Matrícula' para verlo aquí."
+                                } ?: "Guarda tu perfil y liquida cursos libres en la pestaña '2. Matrícula' para visualizar los comprobantes aquí.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = GrisTextoSecundario,
                                 textAlign = TextAlign.Center
@@ -314,8 +332,10 @@ private fun LiquidacionItemCard(
                     text = liquidacion.cursoLibre,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = NegroTexto
+                    color = NegroTexto,
+                    modifier = Modifier.weight(1f)
                 )
+                Spacer(modifier = Modifier.width(8.dp))
                 Surface(
                     shape = RoundedCornerShape(50),
                     color = CremaFondo,
@@ -331,11 +351,33 @@ private fun LiquidacionItemCard(
                 }
             }
 
-            Text(
-                text = "Tarifa base: ${currencyFormat.format(liquidacion.costoBase)}",
-                style = MaterialTheme.typography.bodySmall,
-                color = GrisTextoSecundario
-            )
+            // Fila con tarifa base y etiqueta de trazabilidad con el Código del Estudiante
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Tarifa base: ${currencyFormat.format(liquidacion.costoBase)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = GrisTextoSecundario
+                )
+
+                // Etiqueta visible con el Código del Estudiante para trazabilidad completa
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = CremaFondo,
+                    border = BorderStroke(1.dp, VinoTintoOleo.copy(alpha = 0.35f))
+                ) {
+                    Text(
+                        text = "Código: ${liquidacion.codigoEstudiante}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = VinoTintoOleo,
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp)
+                    )
+                }
+            }
 
             // Etiquetas tipo píldora (VerdeOpalo para Beca, MagentaOleo para Icetex)
             Row(
