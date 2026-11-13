@@ -42,6 +42,19 @@ class ServiciosViewModel(
 
     init {
         cargarDatosPersistidos()
+        cargarCursosRemotos()
+    }
+
+    private fun cargarCursosRemotos() {
+        viewModelScope.launch {
+            val cursos = repository.obtenerCursosRemotos()
+            if (cursos.isNotEmpty()) {
+                val mapa = cursos.associate { it.nombre to it.costoBase }
+                _uiState.update { current ->
+                    current.copy(cursosDisponibles = current.cursosDisponibles + mapa)
+                }
+            }
+        }
     }
 
     fun cargarDatosPersistidos() {
@@ -320,20 +333,20 @@ class ServiciosViewModel(
         val cursosNombres = currentState.cursosSeleccionados.joinToString(", ")
 
         val liquidacionesActuales = currentState.listaLiquidaciones
-        val todasLasLiquidaciones = repository.obtenerLiquidaciones()
-        val nuevoId = (todasLasLiquidaciones.maxOfOrNull { it.id } ?: liquidacionesActuales.maxOfOrNull { it.id } ?: 0) + 1
-
-        val nuevaLiquidacion = LiquidacionMatricula(
-            id = nuevoId,
-            codigoEstudiante = perfilActual.codigo,
-            cursoLibre = cursosNombres,
-            costoBase = subtotal,
-            tieneBeca = currentState.tieneBeca,
-            tieneIcetex = currentState.tieneIcetex,
-            totalAPagar = totalAPagar
-        )
 
         viewModelScope.launch {
+            val nuevoId = repository.obtenerSiguienteIdLiquidacion()
+
+            val nuevaLiquidacion = LiquidacionMatricula(
+                id = nuevoId,
+                codigoEstudiante = perfilActual.codigo,
+                cursoLibre = cursosNombres,
+                costoBase = subtotal,
+                tieneBeca = currentState.tieneBeca,
+                tieneIcetex = currentState.tieneIcetex,
+                totalAPagar = totalAPagar
+            )
+
             repository.guardarLiquidacion(nuevaLiquidacion)
 
             val listaActualizada = repository.obtenerLiquidacionesPorCodigo(perfilActual.codigo)
@@ -414,6 +427,16 @@ class ServiciosViewModel(
                 esError = false
             )
         }
+
+        viewModelScope.launch {
+            repository.guardarCursoRemoto(
+                com.uts.serviciosestudiantiles.data.CursoLibre(
+                    id = (repository.obtenerCursosRemotos().maxOfOrNull { it.id } ?: 0) + 1,
+                    nombre = nombreLimpio,
+                    costoBase = costo
+                )
+            )
+        }
     }
 
     fun eliminarCursoLibre(nombre: String) {
@@ -427,6 +450,10 @@ class ServiciosViewModel(
                 mensajeMensajeEstado = "Curso '$nombre' eliminado de la oferta",
                 esError = false
             )
+        }
+
+        viewModelScope.launch {
+            repository.eliminarCursoRemoto(nombre)
         }
     }
 

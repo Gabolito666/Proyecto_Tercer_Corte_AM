@@ -126,6 +126,54 @@ class ServiciosRepository(
         return liquidacionesLocales.filter { it.codigoEstudiante == codigoLimpio }
     }
 
+    suspend fun obtenerSiguienteIdLiquidacion(): Int {
+        val todas = obtenerTodasLasLiquidaciones()
+        val maxId = todas.maxOfOrNull { it.id } ?: liquidacionesLocales.maxOfOrNull { it.id } ?: 0
+        return maxId + 1
+    }
+
+    suspend fun obtenerCursosRemotos(): List<CursoLibre> {
+        if (isConfigured) {
+            val remotas = withContext(ioDispatcher) {
+                runCatching {
+                    client.from("cursos")
+                        .select()
+                        .decodeList<CursoLibre>()
+                }.getOrNull()
+            }
+            if (remotas != null && remotas.isNotEmpty()) {
+                return remotas
+            }
+        }
+        return emptyList()
+    }
+
+    suspend fun guardarCursoRemoto(curso: CursoLibre) {
+        if (isConfigured) {
+            withContext(ioDispatcher) {
+                runCatching {
+                    client.from("cursos").upsert(curso) {
+                        onConflict = "nombre"
+                    }
+                }.getOrNull()
+            }
+        }
+    }
+
+    suspend fun eliminarCursoRemoto(nombre: String) {
+        if (isConfigured) {
+            withContext(ioDispatcher) {
+                runCatching {
+                    client.from("cursos").delete {
+                        filter {
+                            eq("nombre", nombre)
+                        }
+                    }
+                }.getOrNull()
+            }
+        }
+    }
+
     suspend fun obtenerTodasLasLiquidaciones(): List<LiquidacionMatricula> {
         if (isConfigured) {
             val remotas = withContext(Dispatchers.IO) {
