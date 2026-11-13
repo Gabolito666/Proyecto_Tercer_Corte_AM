@@ -1,6 +1,7 @@
 package com.uts.serviciosestudiantiles.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.uts.serviciosestudiantiles.data.LiquidacionMatricula
 import com.uts.serviciosestudiantiles.data.PerfilEstudiante
 import com.uts.serviciosestudiantiles.data.ServiciosRepository
@@ -8,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class ServiciosViewModel(
     private val repository: ServiciosRepository = ServiciosRepository()
@@ -126,21 +128,39 @@ class ServiciosViewModel(
                 correoInstitucional = correo
             )
 
-            repository.guardarPerfil(nuevoPerfil)
+            viewModelScope.launch {
+                runCatching {
+                    repository.guardarPerfil(nuevoPerfil)
+                }
 
-            val liquidacionesEstudiante = repository.obtenerLiquidacionesPorCodigo(codigo)
-            val totalEstudiante = liquidacionesEstudiante.sumOf { it.totalAPagar }
+                _uiState.update {
+                    it.copy(
+                        perfilGuardado = nuevoPerfil,
+                        correoSimulado = correo,
+                        puedeLiquidar = true
+                    )
+                }
+            }
+        }
+    }
 
-            _uiState.update {
-                it.copy(
-                    perfilGuardado = nuevoPerfil,
-                    correoSimulado = correo,
-                    puedeLiquidar = true,
-                    esUsuarioExistente = false,
-                    mensajeMensajeEstado = "Nuevo estudiante registrado: Perfil guardado con éxito",
-                    listaLiquidaciones = liquidacionesEstudiante,
-                    totalAcumulado = totalEstudiante
-                )
+    fun buscarPerfilPorCodigo(codigo: String) {
+        val codigoLimpio = codigo.trim()
+        if (codigoLimpio.isEmpty()) return
+
+        viewModelScope.launch {
+            val perfilEncontrado = repository.buscarPerfilPorCodigo(codigoLimpio)
+            if (perfilEncontrado != null) {
+                _uiState.update {
+                    it.copy(
+                        campoNombre = perfilEncontrado.nombre,
+                        campoCodigo = perfilEncontrado.codigo,
+                        facultadSeleccionada = perfilEncontrado.facultad,
+                        perfilGuardado = perfilEncontrado,
+                        correoSimulado = perfilEncontrado.correoInstitucional,
+                        puedeLiquidar = true
+                    )
+                }
             }
         }
     }
@@ -174,12 +194,13 @@ class ServiciosViewModel(
             return
         }
 
+        val codigoEstudiante = currentState.perfilGuardado.codigo
         val costoBase = cursosConCostos[currentState.cursoSeleccionado] ?: 0.0
         val descuento = if (currentState.tieneBeca) costoBase * 0.5 else 0.0
         val recargo = if (currentState.tieneIcetex) costoBase * 0.05 else 0.0
         val totalAPagar = costoBase - descuento + recargo
 
-        val liquidacionesActuales = repository.obtenerTodasLasLiquidaciones()
+        val liquidacionesActuales = currentState.listaLiquidaciones
         val nuevoId = (liquidacionesActuales.maxOfOrNull { it.id } ?: 0) + 1
 
         val nuevaLiquidacion = LiquidacionMatricula(
@@ -192,14 +213,42 @@ class ServiciosViewModel(
             totalAPagar = totalAPagar
         )
 
-        // Guardado inmediato en persistencia local
-        repository.guardarLiquidacion(nuevaLiquidacion)
+        viewModelScope.launch {
+            runCatching {
+                repository.guardarLiquidacion(nuevaLiquidacion)
+            }
 
-        _uiState.update {
-            it.copy(
-                tieneBeca = false,
-                tieneIcetex = false
-            )
+            val listaActualizada = runCatching {
+                val remotas = repository.obtenerLiquidacionesPorCodigo(codigoEstudiante)
+                if (remotas.isNotEmpty()) remotas else (liquidacionesActuales + nuevaLiquidacion)
+            }.getOrElse {
+                liquidacionesActuales + nuevaLiquidacion
+            }
+            val nuevoTotalAcumulado = listaActualizada.sumOf { it.totalAPagar }
+
+            _uiState.update {
+                it.copy(
+                    listaLiquidaciones = listaActualizada,
+                    totalAcumulado = nuevoTotalAcumulado,
+                    tieneBeca = false,
+                    tieneIcetex = false
+                )
+            }
+        }
+    }
+
+    fun obtenerLiquidacionesPorCodigo(codigo: String) {
+        val codigoLimpio = codigo.trim()
+        if (codigoLimpio.isEmpty()) return
+
+        viewModelScope.launch {
+            val remotas = repository.obtenerLiquidacionesPorCodigo(codigoLimpio)
+            _uiState.update {
+                it.copy(
+                    listaLiquidaciones = remotas,
+                    totalAcumulado = remotas.sumOf { it.totalAPagar }
+                )
+            }
         }
 
         actualizarHistorialPorEstudiante(perfilActual.codigo)
