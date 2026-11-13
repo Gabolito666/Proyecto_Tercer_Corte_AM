@@ -23,11 +23,13 @@ class ServiciosViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        com.uts.serviciosestudiantiles.data.ServiciosRepository.isTestMode = true
     }
 
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+        com.uts.serviciosestudiantiles.data.ServiciosRepository.isTestMode = false
     }
 
     @Test

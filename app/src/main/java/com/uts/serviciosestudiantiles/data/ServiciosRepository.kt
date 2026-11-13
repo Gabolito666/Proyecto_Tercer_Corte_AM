@@ -2,19 +2,26 @@ package com.uts.serviciosestudiantiles.data
 
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class ServiciosRepository(
-    private val client: SupabaseClient = supabaseClient
+    private val client: SupabaseClient = supabaseClient,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
+    companion object {
+        var isTestMode: Boolean = false
+    }
+
     // Almacenamiento local en memoria como fallback y cache
     private val perfilesLocales = mutableMapOf<String, PerfilEstudiante>()
     private val liquidacionesLocales = mutableListOf<LiquidacionMatricula>()
     private var perfilActivo: PerfilEstudiante? = null
 
     private val isConfigured: Boolean
-        get() = SUPABASE_ANON_KEY.isNotBlank() &&
+        get() = !isTestMode &&
+                SUPABASE_ANON_KEY.isNotBlank() &&
                 !SUPABASE_ANON_KEY.contains("TU_ANON_KEY") &&
                 !SUPABASE_ANON_KEY.contains("AQUI") &&
                 SUPABASE_URL.isNotBlank() &&
