@@ -331,6 +331,26 @@ fun PerfilScreen(
                             }
                         }
 
+                        // Botón para Cambiar Contraseña (estudiante o administrador)
+                        Button(
+                            onClick = { viewModel.abrirDialogoCambioPassword() },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(50),
+                            colors = ButtonDefaults.buttonColors(containerColor = if (state.esAdmin) VinoTintoOleo else VerdeOpalo)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = if (state.esAdmin) VerdeOpalo else BlancoSuperficie
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Cambiar Contraseña Institucional",
+                                fontWeight = FontWeight.Bold,
+                                color = if (state.esAdmin) BlancoSuperficie else BlancoSuperficie
+                            )
+                        }
+
                         // Botón de Cerrar Sesión
                         OutlinedButton(
                             onClick = { viewModel.cerrarSesion() },

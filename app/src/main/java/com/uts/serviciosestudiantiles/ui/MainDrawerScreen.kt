@@ -440,5 +440,8 @@ fun MainDrawerScreen(
                 }
             }
         }
+
+        // Diálogo obligatorio o voluntario de cambio de contraseña institucional
+        CambioPasswordDialog(viewModel = viewModel)
     }
 }

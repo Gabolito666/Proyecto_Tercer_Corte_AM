@@ -235,4 +235,92 @@ class ServiciosViewModelTest {
         assertTrue(state.listaLiquidaciones.first().cursoLibre.contains("Inglés Técnico"))
         assertTrue(state.listaLiquidaciones.first().cursoLibre.contains("Ciberseguridad"))
     }
+
+    @Test
+    fun testFlujoContrasenasYAutenticacionSegura() = runTest(testDispatcher) {
+        val viewModel = ServiciosViewModel()
+        advanceUntilIdle()
+
+        // 1. Registro de nuevo usuario solo con nombre y código
+        viewModel.onNombreCambiado("Estudiante Prueba")
+        viewModel.onCodigoCambiado("50123456")
+        viewModel.guardarPerfil()
+        advanceUntilIdle()
+
+        var state = viewModel.uiState.value
+        assertNotNull(state.perfilGuardado)
+        // La contraseña por defecto es automáticamente su código
+        assertEquals("50123456", state.perfilGuardado?.contrasenaEfectiva)
+        // Requiere cambio obligatorio por seguridad
+        assertTrue(state.perfilGuardado?.requiereCambioContrasena == true)
+
+        // Cerrar sesión
+        viewModel.cerrarSesion()
+        advanceUntilIdle()
+
+        // 2. Ingreso por segunda vez con contraseña incorrecta -> Debe fallar
+        viewModel.onRolAuthCambiado(com.uts.serviciosestudiantiles.viewmodel.RolUsuario.ESTUDIANTE)
+        viewModel.iniciarSesion("50123456", "claveErronea123")
+        advanceUntilIdle()
+        state = viewModel.uiState.value
+        assertTrue(state.esError)
+        assertTrue(state.mensajeMensajeEstado?.contains("Contraseña incorrecta") == true)
+
+        // 3. Ingreso con su contraseña inicial (su mismo código) -> Debe exigir cambio de contraseña
+        viewModel.iniciarSesion("50123456", "50123456")
+        advanceUntilIdle()
+        state = viewModel.uiState.value
+        assertFalse(state.esError)
+        assertTrue(state.mostrarDialogoCambioPassword)
+
+        // 4. Intento de cambio con contraseña igual al código -> Debe rechazar por seguridad
+        viewModel.onNuevoPasswordCambiado("50123456")
+        viewModel.onConfirmarNuevoPasswordCambiado("50123456")
+        viewModel.cambiarContrasenaObligatoria()
+        advanceUntilIdle()
+        state = viewModel.uiState.value
+        assertNotNull(state.errorCambioPassword)
+        assertTrue(state.mostrarDialogoCambioPassword)
+
+        // 5. Cambio exitoso por una contraseña diferente
+        viewModel.onNuevoPasswordCambiado("MiClaveSegura2026")
+        viewModel.onConfirmarNuevoPasswordCambiado("MiClaveSegura2026")
+        viewModel.cambiarContrasenaObligatoria()
+        advanceUntilIdle()
+        state = viewModel.uiState.value
+        assertFalse(state.mostrarDialogoCambioPassword)
+        assertEquals("MiClaveSegura2026", state.perfilGuardado?.contrasenaEfectiva)
+        assertFalse(state.perfilGuardado?.requiereCambioContrasena == true)
+
+        // 6. Cerrar sesión y verificar que inicia con la nueva contraseña sin pedir cambio
+        viewModel.cerrarSesion()
+        advanceUntilIdle()
+
+        viewModel.iniciarSesion("50123456", "MiClaveSegura2026")
+        advanceUntilIdle()
+        state = viewModel.uiState.value
+        assertFalse(state.esError)
+        assertFalse(state.mostrarDialogoCambioPassword)
+        assertEquals("Estudiante Prueba", state.perfilGuardado?.nombre)
+
+        // 7. Verificación de Administrador: contraseña obligatoria 'admin'
+        viewModel.cerrarSesion()
+        advanceUntilIdle()
+
+        viewModel.onRolAuthCambiado(com.uts.serviciosestudiantiles.viewmodel.RolUsuario.ADMINISTRADOR)
+        // Con contraseña incorrecta
+        viewModel.iniciarSesion("ADMIN", "incorrecta")
+        advanceUntilIdle()
+        state = viewModel.uiState.value
+        assertTrue(state.esError)
+        assertFalse(state.esAdmin)
+
+        // Con contraseña correcta 'admin'
+        viewModel.iniciarSesion("ADMIN", "admin")
+        advanceUntilIdle()
+        state = viewModel.uiState.value
+        assertFalse(state.esError)
+        assertTrue(state.esAdmin)
+        assertFalse(state.mostrarDialogoCambioPassword)
+    }
 }

@@ -468,64 +468,33 @@ fun AuthScreen(
                                 colors = textFieldColors
                             )
 
-                            // Selector desplegable de Facultad
-                            ExposedDropdownMenuBox(
-                                expanded = state.menuFacultadAbierto,
-                                onExpandedChange = viewModel::toggleMenuFacultad,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                OutlinedTextField(
-                                    value = state.facultadSeleccionada,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    label = { Text("Facultad Académica") },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.School, contentDescription = null)
-                                    },
-                                    trailingIcon = {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = state.menuFacultadAbierto)
-                                    },
-                                    modifier = Modifier
-                                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                                        .fillMaxWidth(),
-                                    shape = RoundedCornerShape(14.dp),
-                                    colors = textFieldColors
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = state.menuFacultadAbierto,
-                                    onDismissRequest = { viewModel.toggleMenuFacultad(false) }
-                                ) {
-                                    viewModel.facultades.forEach { facultad ->
-                                        DropdownMenuItem(
-                                            text = { Text(facultad, color = NegroTexto) },
-                                            onClick = { viewModel.onFacultadSeleccionada(facultad) }
-                                        )
-                                    }
-                                }
-                            }
-
-                            OutlinedTextField(
-                                value = state.campoPassword,
-                                onValueChange = viewModel::onPasswordCambiado,
-                                label = { Text("Contraseña de Acceso") },
-                                placeholder = { Text("Crea tu contraseña") },
-                                leadingIcon = {
-                                    Icon(Icons.Default.Lock, contentDescription = null)
-                                },
-                                trailingIcon = {
-                                    IconButton(onClick = viewModel::togglePasswordVisible) {
-                                        Icon(
-                                            imageVector = if (state.passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                            contentDescription = "Mostrar u ocultar contraseña"
-                                        )
-                                    }
-                                },
-                                visualTransformation = if (state.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                                singleLine = true,
+                            // Aviso institucional de asignación de contraseña y cambio obligatorio
+                            Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(14.dp),
-                                colors = textFieldColors
-                            )
+                                colors = CardDefaults.cardColors(containerColor = CremaFondo),
+                                border = BorderStroke(1.dp, GrisPlata)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Lock,
+                                        contentDescription = null,
+                                        tint = VinoTintoOleo,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = "Tu contraseña inicial será automáticamente tu código de estudiante. Al iniciar sesión por primera vez, deberás cambiarla por una diferente.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = NegroTexto
+                                    )
+                                }
+                            }
 
                             Button(
                                 onClick = { viewModel.guardarPerfil() },
@@ -639,7 +608,8 @@ fun AuthScreen(
                         OutlinedButton(
                             onClick = {
                                 viewModel.onCodigoCambiado("ADMIN")
-                                viewModel.iniciarSesion("ADMIN")
+                                viewModel.onPasswordCambiado("admin")
+                                viewModel.iniciarSesion("ADMIN", "admin")
                             },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(50),
@@ -651,5 +621,8 @@ fun AuthScreen(
                 }
             }
         }
+
+        // Diálogo modal obligatorio de cambio de contraseña institucional
+        CambioPasswordDialog(viewModel = viewModel)
     }
 }

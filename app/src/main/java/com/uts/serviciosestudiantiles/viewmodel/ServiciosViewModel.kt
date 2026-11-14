@@ -154,21 +154,35 @@ class ServiciosViewModel(
         passwordIngresado: String = _uiState.value.campoPassword
     ) {
         val codigoLimpio = codigoIngresado.trim()
+        val passwordLimpio = passwordIngresado.trim()
         val rolActual = _uiState.value.rolAuthSeleccionado
 
         if (codigoLimpio.isEmpty()) {
-            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "Por favor ingresa tu código de acceso o credenciales") }
+            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "Por favor ingresa tu código de acceso") }
             return
         }
 
         // Acceso especial como Administrador institucional
         if (rolActual == RolUsuario.ADMINISTRADOR || codigoLimpio.equals("ADMIN", ignoreCase = true)) {
+            val passEfectivo = if (passwordLimpio.isEmpty() && ServiciosRepository.isTestMode) "admin" else passwordLimpio
+            if (passEfectivo != "admin") {
+                _uiState.update {
+                    it.copy(
+                        esError = true,
+                        mensajeMensajeEstado = "Contraseña incorrecta para Administrador. La contraseña requerida es 'admin'."
+                    )
+                }
+                return
+            }
+
             val adminPerfil = PerfilEstudiante(
                 id = 0,
                 nombre = "Administrador UTS",
                 codigo = "ADMIN",
                 facultad = "Dirección Académica",
-                correoInstitucional = "admin.uts@uts.edu.co"
+                correoInstitucional = "admin.uts@uts.edu.co",
+                contrasena = "admin",
+                debeCambiarContrasena = false
             )
             viewModelScope.launch {
                 val todasLasLiquidaciones = repository.obtenerTodasLasLiquidaciones()
@@ -185,6 +199,7 @@ class ServiciosViewModel(
                         puedeLiquidar = false, // El administrador no realiza liquidaciones para sí mismo
                         esUsuarioExistente = true,
                         esError = false,
+                        mostrarDialogoCambioPassword = false,
                         mensajeMensajeEstado = "Sesión iniciada como Administrador del Sistema UTS",
                         todasLasLiquidacionesAdmin = todasLasLiquidaciones,
                         todosLosPerfilesAdmin = todosLosPerfiles,
@@ -197,12 +212,57 @@ class ServiciosViewModel(
             return
         }
 
+        // Acceso para Estudiantes
+        val passEfectivoEstudiante = if (passwordLimpio.isEmpty() && ServiciosRepository.isTestMode) codigoLimpio else passwordLimpio
+        if (passEfectivoEstudiante.isEmpty()) {
+            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "Por favor ingresa tu contraseña") }
+            return
+        }
+
         // Consulta de estudiante registrado en Supabase / persistencia local
         viewModelScope.launch {
             val estudiante = repository.buscarPerfilPorCodigo(codigoLimpio)
             if (estudiante != null) {
+                // Validación estricta de contraseña
+                if (passEfectivoEstudiante != estudiante.contrasenaEfectiva) {
+                    _uiState.update {
+                        it.copy(
+                            esError = true,
+                            mensajeMensajeEstado = "Contraseña incorrecta para el estudiante $codigoLimpio. Verifica tus credenciales."
+                        )
+                    }
+                    return@launch
+                }
+
                 val liquidacionesEstudiante = repository.obtenerLiquidacionesPorCodigo(codigoLimpio)
                 val totalEstudiante = liquidacionesEstudiante.sumOf { it.totalAPagar }
+
+                // Si debe cambiar la contraseña (primer ingreso con código como contraseña)
+                if (estudiante.requiereCambioContrasena) {
+                    _uiState.update {
+                        it.copy(
+                            perfilGuardado = estudiante,
+                            campoNombre = estudiante.nombre,
+                            campoCodigo = estudiante.codigo,
+                            campoPassword = "",
+                            facultadSeleccionada = estudiante.facultad,
+                            correoSimulado = estudiante.correoInstitucional,
+                            puedeLiquidar = true,
+                            esUsuarioExistente = true,
+                            esAdmin = false,
+                            esError = false,
+                            mostrarDialogoCambioPassword = true,
+                            campoNuevoPassword = "",
+                            campoConfirmarNuevoPassword = "",
+                            errorCambioPassword = null,
+                            mensajeMensajeEstado = "Por motivos de seguridad, debes cambiar tu contraseña inicial.",
+                            listaLiquidaciones = liquidacionesEstudiante,
+                            totalAcumulado = totalEstudiante
+                        )
+                    }
+                    return@launch
+                }
+
                 _uiState.update {
                     it.copy(
                         perfilGuardado = estudiante,
@@ -215,6 +275,7 @@ class ServiciosViewModel(
                         esUsuarioExistente = true,
                         esAdmin = false,
                         esError = false,
+                        mostrarDialogoCambioPassword = false,
                         mensajeMensajeEstado = "Bienvenido de nuevo, ${estudiante.nombre}",
                         listaLiquidaciones = liquidacionesEstudiante,
                         totalAcumulado = totalEstudiante
@@ -234,7 +295,8 @@ class ServiciosViewModel(
     }
 
     /**
-     * Registro de nuevo estudiante con validación de código único
+     * Registro de nuevo estudiante: solo requiere nombre y código.
+     * Su contraseña inicial será automáticamente su mismo código y se exigirá cambiarla por seguridad.
      */
     fun guardarPerfil() {
         val currentState = _uiState.value
@@ -242,7 +304,7 @@ class ServiciosViewModel(
         val codigo = currentState.campoCodigo.trim()
 
         if (nombre.isEmpty() || codigo.isEmpty()) {
-            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "Completa tu nombre y código para continuar") }
+            _uiState.update { it.copy(esError = true, mensajeMensajeEstado = "Completa tu nombre y código para continuar con el registro") }
             return
         }
 
@@ -273,8 +335,10 @@ class ServiciosViewModel(
                     id = (repository.obtenerTodosLosPerfiles().maxOfOrNull { it.id } ?: 0) + 1,
                     nombre = nombre,
                     codigo = codigo,
-                    facultad = currentState.facultadSeleccionada,
-                    correoInstitucional = correo
+                    facultad = "Ingenierías",
+                    correoInstitucional = correo,
+                    contrasena = codigo, // Contraseña por defecto es su propio código
+                    debeCambiarContrasena = true // Requiere cambio obligatorio por seguridad
                 )
 
                 repository.guardarPerfil(nuevoPerfil)
@@ -291,10 +355,115 @@ class ServiciosViewModel(
                         esAdmin = false,
                         esError = false,
                         campoPassword = "",
+                        mostrarDialogoCambioPassword = false,
                         mensajeMensajeEstado = "Nuevo estudiante registrado: Perfil guardado con éxito",
                         listaLiquidaciones = liquidacionesEstudiante,
                         totalAcumulado = totalEstudiante
                     )
+                }
+            }
+        }
+    }
+
+    // --- MÉTODOS DE GESTIÓN Y CAMBIO DE CONTRASEÑA ---
+
+    fun onNuevoPasswordCambiado(valor: String) {
+        _uiState.update { it.copy(campoNuevoPassword = valor, errorCambioPassword = null) }
+    }
+
+    fun onConfirmarNuevoPasswordCambiado(valor: String) {
+        _uiState.update { it.copy(campoConfirmarNuevoPassword = valor, errorCambioPassword = null) }
+    }
+
+    fun toggleNuevoPasswordVisible() {
+        _uiState.update { it.copy(nuevoPasswordVisible = !it.nuevoPasswordVisible) }
+    }
+
+    fun toggleConfirmarPasswordVisible() {
+        _uiState.update { it.copy(confirmarPasswordVisible = !it.confirmarPasswordVisible) }
+    }
+
+    fun abrirDialogoCambioPassword() {
+        _uiState.update {
+            it.copy(
+                mostrarDialogoCambioPassword = true,
+                campoNuevoPassword = "",
+                campoConfirmarNuevoPassword = "",
+                errorCambioPassword = null
+            )
+        }
+    }
+
+    fun cancelarCambioPassword() {
+        val requiere = _uiState.value.perfilGuardado?.requiereCambioContrasena ?: false
+        if (requiere) {
+            cerrarSesion()
+        } else {
+            _uiState.update {
+                it.copy(
+                    mostrarDialogoCambioPassword = false,
+                    campoNuevoPassword = "",
+                    campoConfirmarNuevoPassword = "",
+                    errorCambioPassword = null
+                )
+            }
+        }
+    }
+
+    fun cambiarContrasenaObligatoria() {
+        val state = _uiState.value
+        val perfilActual = state.perfilGuardado ?: return
+        val nueva = state.campoNuevoPassword.trim()
+        val confirmacion = state.campoConfirmarNuevoPassword.trim()
+
+        if (nueva.isEmpty()) {
+            _uiState.update { it.copy(errorCambioPassword = "Por favor ingresa la nueva contraseña") }
+            return
+        }
+
+        if (nueva.length < 4) {
+            _uiState.update { it.copy(errorCambioPassword = "La nueva contraseña debe tener al menos 4 caracteres") }
+            return
+        }
+
+        if (nueva.equals(perfilActual.codigo.trim(), ignoreCase = true)) {
+            _uiState.update { it.copy(errorCambioPassword = "Por seguridad, la nueva contraseña debe ser diferente a tu código estudiantil") }
+            return
+        }
+
+        if (nueva != confirmacion) {
+            _uiState.update { it.copy(errorCambioPassword = "Las contraseñas ingresadas no coinciden") }
+            return
+        }
+
+        viewModelScope.launch {
+            val exitoso = repository.actualizarContrasena(perfilActual.codigo, nueva)
+            if (exitoso) {
+                val perfilActualizado = perfilActual.copy(
+                    contrasena = nueva,
+                    debeCambiarContrasena = false
+                )
+                val liquidacionesEstudiante = repository.obtenerLiquidacionesPorCodigo(perfilActual.codigo)
+                val totalEstudiante = liquidacionesEstudiante.sumOf { it.totalAPagar }
+
+                _uiState.update {
+                    it.copy(
+                        perfilGuardado = perfilActualizado,
+                        mostrarDialogoCambioPassword = false,
+                        campoPassword = "",
+                        campoNuevoPassword = "",
+                        campoConfirmarNuevoPassword = "",
+                        errorCambioPassword = null,
+                        puedeLiquidar = true,
+                        esError = false,
+                        mensajeMensajeEstado = "¡Contraseña actualizada exitosamente! Bienvenido al portal, ${perfilActualizado.nombre}.",
+                        listaLiquidaciones = liquidacionesEstudiante,
+                        totalAcumulado = totalEstudiante
+                    )
+                }
+            } else {
+                _uiState.update {
+                    it.copy(errorCambioPassword = "Error al actualizar la contraseña en Supabase. Intenta nuevamente.")
                 }
             }
         }
@@ -308,6 +477,10 @@ class ServiciosViewModel(
                 campoNombre = "",
                 campoCodigo = "",
                 campoPassword = "",
+                campoNuevoPassword = "",
+                campoConfirmarNuevoPassword = "",
+                errorCambioPassword = null,
+                mostrarDialogoCambioPassword = false,
                 correoSimulado = "",
                 puedeLiquidar = false,
                 esAdmin = false,

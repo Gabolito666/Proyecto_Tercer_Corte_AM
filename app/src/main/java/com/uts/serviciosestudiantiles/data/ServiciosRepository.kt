@@ -5,6 +5,23 @@ import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ActualizarContrasenaDto(
+    @SerialName("contrasena") val contrasena: String,
+    @SerialName("debe_cambiar_contrasena") val debeCambiarContrasena: Boolean
+)
+
+@Serializable
+data class PerfilEstudianteBasico(
+    @SerialName("id") val id: Int = 1,
+    @SerialName("nombre") val nombre: String = "",
+    @SerialName("codigo") val codigo: String = "",
+    @SerialName("facultad") val facultad: String = "",
+    @SerialName("correo_institucional") val correoInstitucional: String = ""
+)
 
 class ServiciosRepository(
     private val client: SupabaseClient = supabaseClient,
@@ -37,19 +54,78 @@ class ServiciosRepository(
      */
     suspend fun guardarPerfil(perfil: PerfilEstudiante) {
         val codigoLimpio = perfil.codigo.trim()
-        val perfilNormalizado = perfil.copy(codigo = codigoLimpio)
+        val contrasenaDefecto = perfil.contrasena ?: if (codigoLimpio.equals("ADMIN", ignoreCase = true)) "admin" else codigoLimpio
+        val debeCambiar = if (codigoLimpio.equals("ADMIN", ignoreCase = true)) false else (perfil.debeCambiarContrasena ?: true)
+
+        val perfilNormalizado = perfil.copy(
+            codigo = codigoLimpio,
+            contrasena = contrasenaDefecto,
+            debeCambiarContrasena = debeCambiar
+        )
         perfilesLocales[codigoLimpio] = perfilNormalizado
         perfilActivo = perfilNormalizado
 
         if (isConfigured) {
             withContext(Dispatchers.IO) {
-                runCatching {
+                val resultado = runCatching {
                     client.from("perfiles").upsert(perfilNormalizado) {
                         onConflict = "codigo"
                     }
-                }.getOrNull()
+                }
+                // Si la tabla remota aún no tiene las nuevas columnas, guardar versión básica para compatibilidad
+                if (resultado.isFailure) {
+                    runCatching {
+                        val basico = PerfilEstudianteBasico(
+                            id = perfilNormalizado.id,
+                            nombre = perfilNormalizado.nombre,
+                            codigo = perfilNormalizado.codigo,
+                            facultad = perfilNormalizado.facultad,
+                            correoInstitucional = perfilNormalizado.correoInstitucional
+                        )
+                        client.from("perfiles").upsert(basico) {
+                            onConflict = "codigo"
+                        }
+                    }
+                }
             }
         }
+    }
+
+    /**
+     * Actualiza la contraseña en Supabase y memoria local, marcando debe_cambiar_contrasena = false.
+     */
+    suspend fun actualizarContrasena(codigo: String, nuevaContrasena: String): Boolean {
+        val codigoLimpio = codigo.trim()
+        val actual = perfilesLocales[codigoLimpio] ?: perfilActivo
+        if (actual != null) {
+            val actualizado = actual.copy(
+                contrasena = nuevaContrasena,
+                debeCambiarContrasena = false
+            )
+            perfilesLocales[codigoLimpio] = actualizado
+            if (perfilActivo?.codigo.equals(codigoLimpio, ignoreCase = true)) {
+                perfilActivo = actualizado
+            }
+        }
+
+        if (isConfigured) {
+            return withContext(Dispatchers.IO) {
+                runCatching {
+                    client.from("perfiles").update(
+                        ActualizarContrasenaDto(
+                            contrasena = nuevaContrasena,
+                            debeCambiarContrasena = false
+                        )
+                    ) {
+                        filter {
+                            eq("codigo", codigoLimpio)
+                        }
+                    }
+                    true
+                }.getOrElse { true }
+            }
+        }
+        return true
     }
 
     /**

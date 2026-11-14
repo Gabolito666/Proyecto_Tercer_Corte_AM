@@ -45,6 +45,12 @@ data class ServiciosUiState(
     val mensajeMensajeEstado: String? = null,
     val esUsuarioExistente: Boolean = false,
     val esError: Boolean = false,
+    val mostrarDialogoCambioPassword: Boolean = false,
+    val campoNuevoPassword: String = "",
+    val campoConfirmarNuevoPassword: String = "",
+    val nuevoPasswordVisible: Boolean = false,
+    val confirmarPasswordVisible: Boolean = false,
+    val errorCambioPassword: String? = null,
     val cursosDisponibles: Map<String, Double> = mapOf(
         "Inglés Técnico" to 300000.0,
         "Programación Web" to 450000.0,
