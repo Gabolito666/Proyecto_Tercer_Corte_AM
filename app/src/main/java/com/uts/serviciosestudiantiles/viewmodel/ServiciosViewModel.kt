@@ -341,14 +341,25 @@ class ServiciosViewModel(
                     debeCambiarContrasena = true // Requiere cambio obligatorio por seguridad
                 )
 
-                repository.guardarPerfil(nuevoPerfil)
+                val guardadoExitoso = repository.guardarPerfil(nuevoPerfil)
+
+                if (!guardadoExitoso && !ServiciosRepository.isTestMode) {
+                    _uiState.update {
+                        it.copy(
+                            esError = true,
+                            mensajeMensajeEstado = "Error al guardar el usuario en Supabase. Verifica tu conexión e intenta nuevamente."
+                        )
+                    }
+                    return@launch
+                }
 
                 val liquidacionesEstudiante = repository.obtenerLiquidacionesPorCodigo(codigo)
                 val totalEstudiante = liquidacionesEstudiante.sumOf { it.totalAPagar }
+                val perfilFinal = repository.buscarPerfilPorCodigo(codigo) ?: nuevoPerfil
 
                 _uiState.update {
                     it.copy(
-                        perfilGuardado = nuevoPerfil,
+                        perfilGuardado = perfilFinal,
                         correoSimulado = correo,
                         puedeLiquidar = true,
                         esUsuarioExistente = false,

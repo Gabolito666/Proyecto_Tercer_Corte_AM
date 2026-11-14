@@ -342,27 +342,25 @@ class ServiciosViewModelTest {
             println("TEST BUSCAR INEXISTENTE: $inexistente")
             assertNull(inexistente)
 
-            // Test guardar un nuevo perfil en Supabase
-            val codigoPrueba = "77777777"
+            // Test guardar un nuevo perfil en Supabase (ej. codigo 42)
+            val codigoPrueba = "42"
             val nuevo = com.uts.serviciosestudiantiles.data.PerfilEstudiante(
                 id = null,
-                nombre = "Nuevo Estudiante",
+                nombre = "Estudiante Cuarentaydos",
                 codigo = codigoPrueba,
                 facultad = "Ingenierías",
-                correoInstitucional = "nuevo.$codigoPrueba@uts.edu.co",
+                correoInstitucional = "estudiante42.42@uts.edu.co",
                 contrasena = codigoPrueba,
                 debeCambiarContrasena = true
             )
-            repo.guardarPerfil(nuevo)
+            val guardadoExito = repo.guardarPerfil(nuevo)
+            assertTrue("guardarPerfil debió retornar true", guardadoExito)
 
             val encontrado = repo.buscarPerfilPorCodigo(codigoPrueba)
-            assertNotNull(encontrado)
+            assertNotNull("El perfil 42 debió ser recuperado de Supabase", encontrado)
             assertEquals(codigoPrueba, encontrado?.codigo)
-
-            // Limpieza
-            com.uts.serviciosestudiantiles.data.supabaseClient.from("perfiles").delete {
-                filter { eq("codigo", codigoPrueba) }
-            }
+            assertEquals("42", encontrado?.contrasenaEfectiva)
+            assertTrue(encontrado?.requiereCambioContrasena == true)
         } catch (e: Throwable) {
             println("TEST CONEXION ERROR: ${e.javaClass.name}: ${e.message}")
             e.printStackTrace()

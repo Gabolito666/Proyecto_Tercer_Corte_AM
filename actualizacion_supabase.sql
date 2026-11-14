@@ -13,18 +13,50 @@ ALTER TABLE perfiles
 ALTER COLUMN facultad SET DEFAULT 'Ingenierías';
 
 -- 3. Sincronizar las secuencias de identidad para 'perfiles' y 'liquidaciones'
--- evitando errores de clave duplicada en la clave primaria 'id'
 SELECT setval('perfiles_id_seq', GREATEST(COALESCE((SELECT MAX(id) FROM perfiles), 0), 10) + 1, false);
 SELECT setval('liquidaciones_id_seq', GREATEST(COALESCE((SELECT MAX(id) FROM liquidaciones), 0), 10) + 1, false);
 
--- 4. Asignar como contraseña a los usuarios existentes su mismo código
+-- 4. Triggers defensivos para auto-asignar ID si el cliente envía null
+CREATE OR REPLACE FUNCTION set_perfil_id_if_null()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.id IS NULL THEN
+        NEW.id := nextval('perfiles_id_seq');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_set_perfil_id_if_null ON perfiles;
+CREATE TRIGGER trg_set_perfil_id_if_null
+BEFORE INSERT ON perfiles
+FOR EACH ROW
+EXECUTE FUNCTION set_perfil_id_if_null();
+
+CREATE OR REPLACE FUNCTION set_liquidacion_id_if_null()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.id IS NULL THEN
+        NEW.id := nextval('liquidaciones_id_seq');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_set_liquidacion_id_if_null ON liquidaciones;
+CREATE TRIGGER trg_set_liquidacion_id_if_null
+BEFORE INSERT ON liquidaciones
+FOR EACH ROW
+EXECUTE FUNCTION set_liquidacion_id_if_null();
+
+-- 5. Asignar como contraseña a los usuarios existentes su mismo código
 -- y marcar debe_cambiar_contrasena = TRUE para obligar el cambio en su primer ingreso
 UPDATE perfiles 
 SET contrasena = codigo,
     debe_cambiar_contrasena = TRUE
 WHERE codigo != 'ADMIN' AND (contrasena IS NULL OR contrasena = '');
 
--- 5. Crear o actualizar el usuario Administrador con contraseña 'admin'
+-- 6. Crear o actualizar el usuario Administrador con contraseña 'admin'
 -- y marcar debe_cambiar_contrasena = FALSE
 INSERT INTO perfiles (
     nombre, 
@@ -49,6 +81,6 @@ SET contrasena = 'admin',
     facultad = 'Dirección Académica',
     correo_institucional = 'admin.uts@uts.edu.co';
 
--- 6. Verificación de los perfiles actualizados
+-- 7. Verificación de los perfiles actualizados
 SELECT id, nombre, codigo, facultad, correo_institucional, contrasena, debe_cambiar_contrasena 
 FROM perfiles;

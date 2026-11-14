@@ -15,6 +15,16 @@ data class ActualizarContrasenaDto(
 )
 
 @Serializable
+data class PerfilEstudianteUpsertDto(
+    @SerialName("nombre") val nombre: String,
+    @SerialName("codigo") val codigo: String,
+    @SerialName("facultad") val facultad: String = "Ingenierías",
+    @SerialName("correo_institucional") val correoInstitucional: String,
+    @SerialName("contrasena") val contrasena: String,
+    @SerialName("debe_cambiar_contrasena") val debeCambiarContrasena: Boolean = true
+)
+
+@Serializable
 data class PerfilEstudianteBasico(
     @SerialName("id") val id: Int = 1,
     @SerialName("nombre") val nombre: String = "",
@@ -52,7 +62,7 @@ class ServiciosRepository(
     /**
      * Tabla 'perfiles': Guarda o actualiza el perfil utilizando upsert con 'codigo' como PK única.
      */
-    suspend fun guardarPerfil(perfil: PerfilEstudiante) {
+    suspend fun guardarPerfil(perfil: PerfilEstudiante): Boolean {
         val codigoLimpio = perfil.codigo.trim()
         val contrasenaDefecto = perfil.contrasena ?: if (codigoLimpio.equals("ADMIN", ignoreCase = true)) "admin" else codigoLimpio
         val debeCambiar = if (codigoLimpio.equals("ADMIN", ignoreCase = true)) false else (perfil.debeCambiarContrasena ?: true)
@@ -66,19 +76,34 @@ class ServiciosRepository(
         perfilActivo = perfilNormalizado
 
         if (isConfigured) {
-            withContext(Dispatchers.IO) {
+            return withContext(Dispatchers.IO) {
                 runCatching {
-                    val guardado = client.from("perfiles").upsert(perfilNormalizado) {
+                    val dto = PerfilEstudianteUpsertDto(
+                        nombre = perfilNormalizado.nombre,
+                        codigo = perfilNormalizado.codigo,
+                        facultad = perfilNormalizado.facultad.ifBlank { "Ingenierías" },
+                        correoInstitucional = perfilNormalizado.correoInstitucional,
+                        contrasena = perfilNormalizado.contrasena ?: codigoLimpio,
+                        debeCambiarContrasena = perfilNormalizado.debeCambiarContrasena ?: true
+                    )
+                    val guardado = client.from("perfiles").upsert(dto) {
                         onConflict = "codigo"
                         select()
                     }.decodeSingleOrNull<PerfilEstudiante>()
+
                     if (guardado != null) {
                         perfilesLocales[codigoLimpio] = guardado
                         perfilActivo = guardado
                     }
+                    true
+                }.getOrElse { error ->
+                    println("ERROR AL GUARDAR PERFIL EN SUPABASE: ${error.message}")
+                    error.printStackTrace()
+                    false
                 }
             }
         }
+        return true
     }
 
     /**
