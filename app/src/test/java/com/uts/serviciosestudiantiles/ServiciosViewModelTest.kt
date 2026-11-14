@@ -2,6 +2,7 @@ package com.uts.serviciosestudiantiles
 
 import com.uts.serviciosestudiantiles.viewmodel.ModoAuth
 import com.uts.serviciosestudiantiles.viewmodel.ServiciosViewModel
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -322,5 +323,50 @@ class ServiciosViewModelTest {
         assertFalse(state.esError)
         assertTrue(state.esAdmin)
         assertFalse(state.mostrarDialogoCambioPassword)
+    }
+
+    @Test
+    fun testConexionRealSupabase() = runTest {
+        try {
+            val repo = com.uts.serviciosestudiantiles.data.ServiciosRepository()
+            com.uts.serviciosestudiantiles.data.ServiciosRepository.isTestMode = false
+            val perfiles = repo.obtenerTodosLosPerfilesRemotos()
+            println("TEST CONEXION PERFILES: ${perfiles.size}")
+            assertTrue(perfiles.isNotEmpty())
+
+            val gabriel = repo.buscarPerfilPorCodigo("1142714246")
+            println("TEST BUSCAR GABRIEL: $gabriel")
+            assertNotNull(gabriel)
+
+            val inexistente = repo.buscarPerfilPorCodigo("00000000")
+            println("TEST BUSCAR INEXISTENTE: $inexistente")
+            assertNull(inexistente)
+
+            // Test guardar un nuevo perfil en Supabase
+            val codigoPrueba = "77777777"
+            val nuevo = com.uts.serviciosestudiantiles.data.PerfilEstudiante(
+                id = null,
+                nombre = "Nuevo Estudiante",
+                codigo = codigoPrueba,
+                facultad = "Ingenierías",
+                correoInstitucional = "nuevo.$codigoPrueba@uts.edu.co",
+                contrasena = codigoPrueba,
+                debeCambiarContrasena = true
+            )
+            repo.guardarPerfil(nuevo)
+
+            val encontrado = repo.buscarPerfilPorCodigo(codigoPrueba)
+            assertNotNull(encontrado)
+            assertEquals(codigoPrueba, encontrado?.codigo)
+
+            // Limpieza
+            com.uts.serviciosestudiantiles.data.supabaseClient.from("perfiles").delete {
+                filter { eq("codigo", codigoPrueba) }
+            }
+        } catch (e: Throwable) {
+            println("TEST CONEXION ERROR: ${e.javaClass.name}: ${e.message}")
+            e.printStackTrace()
+            throw e
+        }
     }
 }

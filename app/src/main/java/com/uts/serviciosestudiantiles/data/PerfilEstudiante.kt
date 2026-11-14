@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PerfilEstudiante(
-    @SerialName("id") val id: Int = 1,
+    @SerialName("id") val id: Int? = null,
     @SerialName("nombre") val nombre: String = "",
     @SerialName("codigo") val codigo: String = "",
     @SerialName("facultad") val facultad: String = "Ingenierías",

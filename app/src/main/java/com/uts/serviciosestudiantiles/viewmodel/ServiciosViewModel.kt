@@ -332,7 +332,7 @@ class ServiciosViewModel(
                 val correo = "$nombreLimpio.$codigoLimpio@uts.edu.co"
 
                 val nuevoPerfil = PerfilEstudiante(
-                    id = (repository.obtenerTodosLosPerfiles().maxOfOrNull { it.id } ?: 0) + 1,
+                    id = null,
                     nombre = nombre,
                     codigo = codigo,
                     facultad = "Ingenierías",

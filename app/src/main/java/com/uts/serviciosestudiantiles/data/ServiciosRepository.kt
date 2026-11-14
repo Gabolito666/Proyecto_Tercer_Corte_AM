@@ -67,24 +67,14 @@ class ServiciosRepository(
 
         if (isConfigured) {
             withContext(Dispatchers.IO) {
-                val resultado = runCatching {
-                    client.from("perfiles").upsert(perfilNormalizado) {
+                runCatching {
+                    val guardado = client.from("perfiles").upsert(perfilNormalizado) {
                         onConflict = "codigo"
-                    }
-                }
-                // Si la tabla remota aún no tiene las nuevas columnas, guardar versión básica para compatibilidad
-                if (resultado.isFailure) {
-                    runCatching {
-                        val basico = PerfilEstudianteBasico(
-                            id = perfilNormalizado.id,
-                            nombre = perfilNormalizado.nombre,
-                            codigo = perfilNormalizado.codigo,
-                            facultad = perfilNormalizado.facultad,
-                            correoInstitucional = perfilNormalizado.correoInstitucional
-                        )
-                        client.from("perfiles").upsert(basico) {
-                            onConflict = "codigo"
-                        }
+                        select()
+                    }.decodeSingleOrNull<PerfilEstudiante>()
+                    if (guardado != null) {
+                        perfilesLocales[codigoLimpio] = guardado
+                        perfilActivo = guardado
                     }
                 }
             }
