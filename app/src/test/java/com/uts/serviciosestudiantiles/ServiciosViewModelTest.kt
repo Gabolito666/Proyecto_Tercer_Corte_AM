@@ -235,6 +235,11 @@ class ServiciosViewModelTest {
         assertEquals(800000.0, state.listaLiquidaciones.first().costoBase, 0.01)
         assertTrue(state.listaLiquidaciones.first().cursoLibre.contains("Inglés Técnico"))
         assertTrue(state.listaLiquidaciones.first().cursoLibre.contains("Ciberseguridad"))
+        // Verificación de deselección automática de cursos tras liquidar
+        assertTrue(state.cursosSeleccionados.isEmpty())
+        assertEquals("", state.cursoSeleccionado)
+        assertFalse(state.tieneBeca)
+        assertFalse(state.tieneIcetex)
     }
 
     @Test

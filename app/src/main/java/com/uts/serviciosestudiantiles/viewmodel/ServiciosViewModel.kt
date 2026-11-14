@@ -522,13 +522,13 @@ class ServiciosViewModel(
         _uiState.update { current ->
             val actual = current.cursosSeleccionados
             val nuevaSeleccion = if (actual.contains(curso)) {
-                if (actual.size > 1) actual - curso else actual
+                actual - curso
             } else {
                 actual + curso
             }
             current.copy(
                 cursosSeleccionados = nuevaSeleccion,
-                cursoSeleccionado = nuevaSeleccion.firstOrNull() ?: curso
+                cursoSeleccionado = nuevaSeleccion.firstOrNull() ?: ""
             )
         }
     }
@@ -613,6 +613,9 @@ class ServiciosViewModel(
                     totalAcumulado = nuevoTotalAcumulado,
                     tieneBeca = false,
                     tieneIcetex = false,
+                    becaSeleccionadaId = null,
+                    cursosSeleccionados = emptySet(),
+                    cursoSeleccionado = "",
                     mensajeMensajeEstado = "Matrícula liquidada exitosamente por $nuevoTotalAcumulado"
                 )
             }
