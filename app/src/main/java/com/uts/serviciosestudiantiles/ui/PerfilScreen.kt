@@ -54,6 +54,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uts.serviciosestudiantiles.ui.theme.BlancoSuperficie
+import com.uts.serviciosestudiantiles.ui.theme.FondoAccionPrincipal
+import com.uts.serviciosestudiantiles.ui.theme.TextoAccionPrincipal
 import com.uts.serviciosestudiantiles.ui.theme.CremaFondo
 import com.uts.serviciosestudiantiles.ui.theme.GrisPlata
 import com.uts.serviciosestudiantiles.ui.theme.GrisTextoSecundario
@@ -319,12 +321,12 @@ fun PerfilScreen(
                                 onClick = onNavegarAdmin,
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(50),
-                                colors = ButtonDefaults.buttonColors(containerColor = VinoTintoOleo)
+                                colors = ButtonDefaults.buttonColors(containerColor = FondoAccionPrincipal, contentColor = TextoAccionPrincipal)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.AdminPanelSettings,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimary
+                                    tint = TextoAccionPrincipal
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("Abrir Panel de Administración", fontWeight = FontWeight.Bold)
@@ -336,18 +338,18 @@ fun PerfilScreen(
                             onClick = { viewModel.abrirDialogoCambioPassword() },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(50),
-                            colors = ButtonDefaults.buttonColors(containerColor = if (state.esAdmin) VinoTintoOleo else VerdeOpalo)
+                            colors = ButtonDefaults.buttonColors(containerColor = FondoAccionPrincipal, contentColor = TextoAccionPrincipal)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary
+                                tint = TextoAccionPrincipal
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Cambiar Contraseña Institucional",
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = TextoAccionPrincipal
                             )
                         }
 
@@ -473,7 +475,7 @@ fun PerfilScreen(
                             onClick = { viewModel.cerrarSesion() },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(50),
-                            colors = ButtonDefaults.buttonColors(containerColor = VinoTintoOleo)
+                            colors = ButtonDefaults.buttonColors(containerColor = FondoAccionPrincipal, contentColor = TextoAccionPrincipal)
                         ) {
                             Text("Ir a Pantalla de Autenticación", fontWeight = FontWeight.Bold)
                         }

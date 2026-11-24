@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uts.serviciosestudiantiles.ui.theme.BlancoSuperficie
+import com.uts.serviciosestudiantiles.ui.theme.FondoAccionPrincipal
+import com.uts.serviciosestudiantiles.ui.theme.TextoAccionPrincipal
 import com.uts.serviciosestudiantiles.ui.theme.CremaFondo
 import com.uts.serviciosestudiantiles.ui.theme.GrisPlata
 import com.uts.serviciosestudiantiles.ui.theme.GrisPlataMate
@@ -676,8 +678,8 @@ fun MatriculaScreen(
                     .height(52.dp),
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = VinoTintoOleo,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = FondoAccionPrincipal,
+                    contentColor = TextoAccionPrincipal,
                     disabledContainerColor = GrisPlataMate,
                     disabledContentColor = GrisTextoSecundario
                 ),

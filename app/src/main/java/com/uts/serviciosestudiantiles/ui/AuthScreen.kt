@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -77,7 +78,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.proyecto_tercer_corte.R
-import com.uts.serviciosestudiantiles.ui.theme.AuthTheme
+import com.uts.serviciosestudiantiles.ui.theme.FondoAccionPrincipal
+import com.uts.serviciosestudiantiles.ui.theme.TextoAccionPrincipal
 import com.uts.serviciosestudiantiles.viewmodel.ModoAuth
 import com.uts.serviciosestudiantiles.viewmodel.RolUsuario
 import com.uts.serviciosestudiantiles.viewmodel.ServiciosViewModel
@@ -85,11 +87,10 @@ import com.uts.serviciosestudiantiles.viewmodel.ServiciosViewModel
 @Composable
 fun AuthScreen(
     viewModel: ServiciosViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAbrirAjustes: () -> Unit = {}
 ) {
-    AuthTheme {
-        AuthScreenContent(viewModel, modifier)
-    }
+    AuthScreenContent(viewModel, modifier, onAbrirAjustes)
 }
 
 // El tema se aplica antes de leer sus colores; los eventos siguen siendo los mismos.
@@ -97,7 +98,8 @@ fun AuthScreen(
 @Composable
 private fun AuthScreenContent(
     viewModel: ServiciosViewModel,
-    modifier: Modifier
+    modifier: Modifier,
+    onAbrirAjustes: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
@@ -126,12 +128,12 @@ private fun AuthScreenContent(
             .fillMaxSize()
             .background(colors.background)
     ) {
-        // Conserva la imagen original: centrada, sin recortar y al 20 %.
+        // Marca de agua discreta para mantener el fondo minimalista.
         Image(
             painter = painterResource(R.drawable.mascota_u_uts),
             contentDescription = null,
             contentScale = ContentScale.Fit,
-            alpha = 0.20f,
+            alpha = 0.07f,
             modifier = Modifier
                 .align(Alignment.Center)
                 .widthIn(max = 680.dp)
@@ -148,7 +150,8 @@ private fun AuthScreenContent(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .imePadding()
-                .padding(horizontal = 20.dp, vertical = 28.dp),
+                .padding(horizontal = 20.dp)
+                .padding(top = 72.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -477,8 +480,8 @@ private fun AuthScreenContent(
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                                 shape = RoundedCornerShape(16.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = colors.primary,
-                                    contentColor = colors.onPrimary
+                                    containerColor = FondoAccionPrincipal,
+                                    contentColor = TextoAccionPrincipal
                                 )
                             ) {
                                 Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)
@@ -557,8 +560,8 @@ private fun AuthScreenContent(
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                                 shape = RoundedCornerShape(16.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = colors.primary,
-                                    contentColor = colors.onPrimary
+                                    containerColor = FondoAccionPrincipal,
+                                    contentColor = TextoAccionPrincipal
                                 )
                             ) {
                                 Icon(Icons.Default.PersonAdd, contentDescription = null)
@@ -658,8 +661,8 @@ private fun AuthScreenContent(
                             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = colors.primary,
-                                contentColor = colors.onPrimary
+                                containerColor = FondoAccionPrincipal,
+                                contentColor = TextoAccionPrincipal
                             )
                         ) {
                             Icon(Icons.Default.AdminPanelSettings, contentDescription = null)
@@ -683,6 +686,20 @@ private fun AuthScreenContent(
                     }
                 }
             }
+        }
+
+        IconButton(
+            onClick = onAbrirAjustes,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(top = 12.dp, end = 16.dp)
+        ) {
+            Icon(
+                Icons.Default.Settings,
+                contentDescription = "Ajustes de apariencia",
+                tint = colors.onSurfaceVariant
+            )
         }
 
         // Diálogo modal obligatorio de cambio de contraseña institucional

@@ -67,6 +67,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uts.serviciosestudiantiles.ui.theme.BlancoSuperficie
+import com.uts.serviciosestudiantiles.ui.theme.FondoAccionPrincipal
+import com.uts.serviciosestudiantiles.ui.theme.TextoAccionPrincipal
 import com.uts.serviciosestudiantiles.ui.theme.CremaFondo
 import com.uts.serviciosestudiantiles.ui.theme.GrisPlata
 import com.uts.serviciosestudiantiles.ui.theme.GrisTextoSecundario
@@ -329,9 +331,9 @@ private fun SeccionGestionBecas(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = VinoTintoOleo)
+                    colors = ButtonDefaults.buttonColors(containerColor = FondoAccionPrincipal, contentColor = TextoAccionPrincipal)
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+                    Icon(imageVector = Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Crear y Guardar Beca en Supabase", fontWeight = FontWeight.Bold)
                 }
@@ -492,7 +494,7 @@ private fun SeccionGestionCursos(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = VinoTintoOleo)
+                    colors = ButtonDefaults.buttonColors(containerColor = FondoAccionPrincipal, contentColor = TextoAccionPrincipal)
                 ) {
                     Text("Publicar Curso en Oferta", fontWeight = FontWeight.Bold)
                 }

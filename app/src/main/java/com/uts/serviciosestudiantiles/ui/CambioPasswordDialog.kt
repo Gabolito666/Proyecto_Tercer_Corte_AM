@@ -43,6 +43,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uts.serviciosestudiantiles.ui.theme.BlancoSuperficie
+import com.uts.serviciosestudiantiles.ui.theme.FondoAccionPrincipal
+import com.uts.serviciosestudiantiles.ui.theme.TextoAccionPrincipal
 import com.uts.serviciosestudiantiles.ui.theme.GrisPlata
 import com.uts.serviciosestudiantiles.ui.theme.GrisTextoSecundario
 import com.uts.serviciosestudiantiles.ui.theme.NegroTexto
@@ -206,7 +208,7 @@ fun CambioPasswordDialog(
                     onClick = { viewModel.cambiarContrasenaObligatoria() },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = VinoTintoOleo)
+                    colors = ButtonDefaults.buttonColors(containerColor = FondoAccionPrincipal, contentColor = TextoAccionPrincipal)
                 ) {
                     Text("Guardar Nueva Contraseña", fontWeight = FontWeight.Bold)
                 }

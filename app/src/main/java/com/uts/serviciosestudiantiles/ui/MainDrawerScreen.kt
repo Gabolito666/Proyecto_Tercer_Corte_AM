@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -85,13 +86,14 @@ enum class DestinoDrawer(
 @Composable
 fun MainDrawerScreen(
     viewModel: ServiciosViewModel = viewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAbrirAjustes: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     // 1) PANTALLA DEDICADA DE AUTENTICACIÓN: Se muestra si no hay sesión activa
     if (state.perfilGuardado == null) {
-        AuthScreen(viewModel = viewModel)
+        AuthScreen(viewModel = viewModel, onAbrirAjustes = onAbrirAjustes)
         return
     }
 
@@ -402,6 +404,15 @@ fun MainDrawerScreen(
                                 imageVector = Icons.Default.Menu,
                                 contentDescription = "Menú lateral deslizable",
                                 tint = VinoTintoOleo
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = onAbrirAjustes) {
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = "Ajustes de apariencia",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     },

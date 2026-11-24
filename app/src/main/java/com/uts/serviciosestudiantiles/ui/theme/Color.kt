@@ -5,6 +5,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 
+// Acento reservado a las acciones principales en ambos modos.
+val FondoAccionPrincipal = Color(0xFF315540)
+val TextoAccionPrincipal = Color.White
+
 // Alias de compatibilidad para las pantallas existentes. Los nombres históricos
 // ahora resuelven roles del tema compartido, no colores claros fijos.
 val VinoTintoOleo: Color
