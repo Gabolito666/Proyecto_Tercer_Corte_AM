@@ -1,0 +1,39 @@
+{
+	"nodes":[
+		{"id":"frontend","type":"text","text":"# 🧠 Frontend UTS\nKotlin · Jetpack Compose · Material 3\n\n**Recorrido:** inicio → navegación → pantallas.\nPulsa los enlaces de cada tarjeta para estudiar.\n\n[[00 - Inicio]]","x":0,"y":0,"width":400,"height":240,"color":"5"},
+		{"id":"entrada","type":"text","text":"## 🚀 Inicio\n**MainActivity** abre la interfaz.\n\n`setContent` → `UTSTheme` → `MainDrawerScreen`.\n\nUna sola Activity aloja las pantallas.\n\n[[03 - Inicio y estructura de archivos]]","x":-550,"y":0,"width":400,"height":240,"color":"5"},
+		{"id":"tema","type":"text","text":"## 🎨 Diseño\n**UTSTheme** define el estilo común.\n\nVino tinto, verde, fondo crema y tarjetas redondeadas.\n\nEl tema actual siempre es claro.\n\n[[12 - Tema colores y recursos]]","x":550,"y":0,"width":400,"height":240,"color":"1"},
+		{"id":"estado","type":"text","text":"## 🔄 Estado y eventos\nUsuario → evento → ViewModel → estado → interfaz.\n\n`ServiciosUiState` contiene los valores.\nLas pantallas observan `uiState`.\n\n[[04 - Estado y eventos de la interfaz]]","x":0,"y":-350,"width":400,"height":240,"color":"3"},
+		{"id":"navegacion","type":"text","text":"## 🧭 Navegación\n**MainDrawerScreen**\n\nSin perfil: autenticación.\nCon perfil: menú según el rol.\n\n`destinoActual` + `when` eligen la pantalla.\n\n[[05 - Navegacion y menu lateral]]","x":0,"y":350,"width":400,"height":260,"color":"5"},
+		{"id":"estudiante","type":"text","text":"## 🎓 Estudiante\nTres destinos principales:\n\n1. Perfil.\n2. Matrícula.\n3. Historial.\n\n[[13 - Recorridos de usuario]]","x":0,"y":700,"width":400,"height":260,"color":"4"},
+		{"id":"admin","type":"text","text":"## 🛠️ Administrador\n**AdminScreen**\n\nCuatro pestañas internas.\n`selectedSection` determina cuál se muestra.\n\nEl menú por rol organiza lo visible.\n\n[[10 - Panel de administracion]]","x":1100,"y":700,"width":400,"height":260,"color":"6"},
+		{"id":"becas","type":"text","text":"## 🎁 Becas\nNombre, requisitos y porcentaje.\nSlider de 5 a 100 %.\n\nCrear o eliminar mediante eventos del ViewModel.\n\n[[10 - Panel de administracion]]","x":1100,"y":1100,"width":400,"height":240,"color":"6"},
+		{"id":"globales","type":"text","text":"## 📊 Liquidaciones globales\nLista de registros de estudiantes.\n\nEl total suma los importes de las liquidaciones mostradas.\n\n[[10 - Panel de administracion]]","x":1600,"y":1100,"width":400,"height":240,"color":"6"},
+		{"id":"cursos","type":"text","text":"## 📚 Cursos libres\nFormulario de nombre y costo.\n\nPublicar un curso o quitarlo de la oferta mediante eventos.\n\n[[10 - Panel de administracion]]","x":1100,"y":1450,"width":400,"height":240,"color":"6"},
+		{"id":"perfiles","type":"text","text":"## 👥 Estudiantes\nLista de perfiles con nombre, código, facultad y correo.\n\nSe presenta con `LazyColumn`.\n\n[[10 - Panel de administracion]]","x":1600,"y":1450,"width":400,"height":240,"color":"6"},
+		{"id":"exposicion","type":"text","text":"## 🎤 Para exponer\nSigue las flechas desde Inicio.\n\nExplica: qué muestra cada pantalla, qué evento envía y qué cambia visualmente.\n\n[[14 - Guion de exposicion y preguntas]]\n[[02 - Jetpack Compose explicado]]","x":-550,"y":-360,"width":400,"height":260,"color":"3"},
+		{"id":"auth","type":"text","text":"## 🔑 Autenticación\n**AuthScreen**\n\nSelector de rol.\nEstudiante: ingreso o registro.\nAdministrador: formulario propio.\n\nLos campos envían eventos al ViewModel.\n\n[[06 - Pantalla de autenticacion]]","x":-640,"y":350,"width":400,"height":260,"color":"2"},
+		{"id":"dialogo","type":"text","text":"## 🔒 Cambio de contraseña\n**CambioPasswordDialog**\n\nVentana modal con nueva clave, confirmación y errores.\n\nVisible cuando lo indica el estado; también se abre desde el perfil.\n\n[[11 - Dialogo de contrasena]]","x":-640,"y":700,"width":400,"height":260,"color":"2"},
+		{"id":"perfil","type":"text","text":"## 👤 Perfil\n**PerfilScreen**\n\nNombre, código, facultad y correo.\nCambiar contraseña y cerrar sesión.\n\nTambién lo usa el administrador, con acceso al panel.\n\n[[07 - Pantalla de perfil]]","x":-640,"y":1170,"width":400,"height":280,"color":"4"},
+		{"id":"matricula","type":"text","text":"## 🧮 Matrícula\n**MatriculaScreen**\n\nSeleccionar cursos → aplicar beca → sumar recargo Icetex.\n\nEjemplo: 800.000 − 50 % + 5 % sobre base neta = **420.000**.\n\n[[08 - Pantalla de matricula]]","x":0,"y":1170,"width":400,"height":280,"color":"4"},
+		{"id":"historial","type":"text","text":"## 🧾 Historial\n**HistorialScreen**\n\nTotal acumulado y lista con `LazyColumn`.\nCada tarjeta muestra cursos, beneficios y total.\n\nSon liquidaciones, no pagos confirmados.\n\n[[09 - Pantalla de historial]]","x":550,"y":1170,"width":400,"height":280,"color":"4"}
+	],
+	"edges":[
+		{"id":"e01","fromNode":"entrada","fromSide":"right","toNode":"frontend","toSide":"left","label":"carga"},
+		{"id":"e02","fromNode":"frontend","fromSide":"right","toNode":"tema","toSide":"left","label":"aplica estilo"},
+		{"id":"e03","fromNode":"estado","fromSide":"bottom","toNode":"frontend","toSide":"top","label":"actualiza la vista"},
+		{"id":"e04","fromNode":"frontend","fromSide":"bottom","toNode":"navegacion","toSide":"top"},
+		{"id":"e05","fromNode":"navegacion","fromSide":"left","toNode":"auth","toSide":"right","label":"sin perfil"},
+		{"id":"e06","fromNode":"auth","fromSide":"bottom","toNode":"dialogo","toSide":"top","label":"si requiere cambio"},
+		{"id":"e07","fromNode":"navegacion","fromSide":"bottom","toNode":"estudiante","toSide":"top","label":"rol estudiante"},
+		{"id":"e08","fromNode":"navegacion","fromSide":"right","toNode":"admin","toSide":"top","label":"rol administrador"},
+		{"id":"e09","fromNode":"estudiante","fromSide":"bottom","toNode":"perfil","toSide":"top"},
+		{"id":"e10","fromNode":"estudiante","fromSide":"bottom","toNode":"matricula","toSide":"top"},
+		{"id":"e11","fromNode":"estudiante","fromSide":"bottom","toNode":"historial","toSide":"top"},
+		{"id":"e12","fromNode":"admin","fromSide":"bottom","toNode":"becas","toSide":"top"},
+		{"id":"e13","fromNode":"admin","fromSide":"right","toNode":"globales","toSide":"top"},
+		{"id":"e14","fromNode":"admin","fromSide":"left","toNode":"cursos","toSide":"left"},
+		{"id":"e15","fromNode":"admin","fromSide":"right","toNode":"perfiles","toSide":"right"},
+		{"id":"e16","fromNode":"exposicion","fromSide":"bottom","toNode":"entrada","toSide":"top","label":"empieza aquí"}
+	]
+}
