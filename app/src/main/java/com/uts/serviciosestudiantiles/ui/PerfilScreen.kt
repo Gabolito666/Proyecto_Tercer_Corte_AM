@@ -206,7 +206,7 @@ fun PerfilScreen(
                             ) {
                                 Surface(
                                     shape = CircleShape,
-                                    color = if (state.esAdmin) VinoTintoOleo else VerdeOpaloClaro,
+                                    color = VerdeOpaloClaro,
                                     modifier = Modifier.size(46.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
@@ -253,7 +253,7 @@ fun PerfilScreen(
                                     text = if (state.esAdmin) "ADMIN" else "ESTUDIANTE",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (state.esAdmin) BlancoSuperficie else NegroTexto,
+                                    color = if (state.esAdmin) MaterialTheme.colorScheme.onPrimary else NegroTexto,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                 )
                             }
@@ -324,7 +324,7 @@ fun PerfilScreen(
                                 Icon(
                                     imageVector = Icons.Default.AdminPanelSettings,
                                     contentDescription = null,
-                                    tint = VerdeOpalo
+                                    tint = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("Abrir Panel de Administración", fontWeight = FontWeight.Bold)
@@ -341,13 +341,13 @@ fun PerfilScreen(
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = null,
-                                tint = if (state.esAdmin) VerdeOpalo else BlancoSuperficie
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Cambiar Contraseña Institucional",
                                 fontWeight = FontWeight.Bold,
-                                color = if (state.esAdmin) BlancoSuperficie else BlancoSuperficie
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
 

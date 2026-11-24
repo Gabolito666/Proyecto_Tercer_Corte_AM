@@ -122,7 +122,7 @@ fun AdminScreen(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = VinoTintoOleo,
+                    color = MaterialTheme.colorScheme.primaryContainer,
                     modifier = Modifier.size(42.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -331,7 +331,7 @@ private fun SeccionGestionBecas(
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(containerColor = VinoTintoOleo)
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = VerdeOpalo)
+                    Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Crear y Guardar Beca en Supabase", fontWeight = FontWeight.Bold)
                 }
@@ -641,7 +641,7 @@ private fun SeccionTodasLasLiquidaciones(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = VinoTintoOleo)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
         ) {
             Column(
                 modifier = Modifier
@@ -651,13 +651,13 @@ private fun SeccionTodasLasLiquidaciones(
                 Text(
                     text = "Recaudación Total Institucional UTS",
                     style = MaterialTheme.typography.labelMedium,
-                    color = BlancoSuperficie.copy(alpha = 0.8f)
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
                 )
                 Text(
                     text = currencyFormat.format(totalGlobal),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = BlancoSuperficie
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
                 Text(
                     text = "${state.todasLasLiquidacionesAdmin.size} transacciones registradas en Supabase",

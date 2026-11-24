@@ -4,22 +4,27 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,11 +46,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -64,95 +65,126 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.uts.serviciosestudiantiles.ui.theme.BlancoSuperficie
-import com.uts.serviciosestudiantiles.ui.theme.CremaFondo
-import com.uts.serviciosestudiantiles.ui.theme.GrisPlata
-import com.uts.serviciosestudiantiles.ui.theme.GrisTextoSecundario
-import com.uts.serviciosestudiantiles.ui.theme.NegroTexto
-import com.uts.serviciosestudiantiles.ui.theme.VerdeOpalo
-import com.uts.serviciosestudiantiles.ui.theme.VerdeOpaloClaro
-import com.uts.serviciosestudiantiles.ui.theme.VinoTintoOleo
+import com.example.proyecto_tercer_corte.R
+import com.uts.serviciosestudiantiles.ui.theme.AuthTheme
 import com.uts.serviciosestudiantiles.viewmodel.ModoAuth
 import com.uts.serviciosestudiantiles.viewmodel.RolUsuario
 import com.uts.serviciosestudiantiles.viewmodel.ServiciosViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(
     viewModel: ServiciosViewModel,
     modifier: Modifier = Modifier
 ) {
+    AuthTheme {
+        AuthScreenContent(viewModel, modifier)
+    }
+}
+
+// El tema se aplica antes de leer sus colores; los eventos siguen siendo los mismos.
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AuthScreenContent(
+    viewModel: ServiciosViewModel,
+    modifier: Modifier
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
+    val colors = MaterialTheme.colorScheme
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = VinoTintoOleo,
-        unfocusedBorderColor = GrisPlata,
-        focusedLabelColor = VinoTintoOleo,
-        unfocusedLabelColor = GrisTextoSecundario,
-        cursorColor = VinoTintoOleo,
-        focusedLeadingIconColor = VinoTintoOleo,
-        unfocusedLeadingIconColor = GrisTextoSecundario,
-        focusedTrailingIconColor = VinoTintoOleo,
-        unfocusedTrailingIconColor = GrisTextoSecundario,
-        focusedContainerColor = BlancoSuperficie,
-        unfocusedContainerColor = BlancoSuperficie,
-        focusedTextColor = NegroTexto,
-        unfocusedTextColor = NegroTexto
+        focusedBorderColor = colors.primary,
+        unfocusedBorderColor = colors.outline,
+        focusedLabelColor = colors.primary,
+        unfocusedLabelColor = colors.onSurfaceVariant,
+        cursorColor = colors.primary,
+        focusedLeadingIconColor = colors.primary,
+        unfocusedLeadingIconColor = colors.onSurfaceVariant,
+        focusedTrailingIconColor = colors.primary,
+        unfocusedTrailingIconColor = colors.onSurfaceVariant,
+        focusedContainerColor = colors.background,
+        unfocusedContainerColor = colors.background,
+        focusedTextColor = colors.onSurface,
+        unfocusedTextColor = colors.onSurface,
+        focusedPlaceholderColor = colors.onSurfaceVariant,
+        unfocusedPlaceholderColor = colors.onSurfaceVariant
     )
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .background(CremaFondo)
+            .background(colors.background)
     ) {
+        // Conserva la imagen original: centrada, sin recortar y al 20 %.
+        Image(
+            painter = painterResource(R.drawable.mascota_u_uts),
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            alpha = 0.20f,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .widthIn(max = 680.dp)
+                .fillMaxWidth(0.94f)
+                .fillMaxHeight(0.85f)
+        )
+        val perfilesEnColumna = maxWidth < 340.dp || LocalDensity.current.fontScale > 1.3f
         Column(
             modifier = Modifier
+                .align(Alignment.TopCenter)
+                .widthIn(max = 560.dp)
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .imePadding()
-                .padding(horizontal = 20.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(horizontal = 20.dp, vertical = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Logotipo y Cabecera Institucional UTS
             Surface(
                 shape = CircleShape,
-                color = VinoTintoOleo,
-                modifier = Modifier.size(60.dp),
-                shadowElevation = 4.dp
+                color = colors.primaryContainer,
+                modifier = Modifier.size(72.dp),
+                border = BorderStroke(1.dp, colors.primary.copy(alpha = 0.5f))
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Default.School,
                         contentDescription = "Logo UTS",
-                        tint = VerdeOpalo,
-                        modifier = Modifier.size(32.dp)
+                        tint = colors.onPrimaryContainer,
+                        modifier = Modifier.size(36.dp)
                     )
                 }
             }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Text(
                     text = "UTS Servicios Estudiantiles",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = NegroTexto
+                    color = colors.onBackground,
+                    textAlign = TextAlign.Center
                 )
                 Text(
                     text = "Portal de Autenticación y Matrícula",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = GrisTextoSecundario
+                    color = colors.onSurfaceVariant,
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -165,10 +197,10 @@ fun AuthScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
+                        colors = CardDefaults.cardColors(containerColor = colors.surface),
                         border = BorderStroke(
                             width = 1.5.dp,
-                            color = if (state.esError) VinoTintoOleo else VerdeOpalo
+                            color = if (state.esError) colors.error else colors.primary
                         ),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
@@ -181,14 +213,14 @@ fun AuthScreen(
                             Icon(
                                 imageVector = if (state.esError) Icons.Default.Error else Icons.Default.CheckCircle,
                                 contentDescription = null,
-                                tint = if (state.esError) VinoTintoOleo else VerdeOpalo,
+                                tint = if (state.esError) colors.error else colors.primary,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = mensaje,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = NegroTexto,
+                                color = colors.onSurface,
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -201,13 +233,16 @@ fun AuthScreen(
                 text = "Selecciona tu Tipo de Perfil",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = NegroTexto,
+                color = colors.onBackground,
                 modifier = Modifier.align(Alignment.Start)
             )
 
-            Row(
+            // En teléfonos estrechos o con letra grande las tarjetas se apilan.
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                maxItemsInEachRow = if (perfilesEnColumna) 1 else 2
             ) {
                 // Opción 1: Estudiante
                 val isEstudiante = state.rolAuthSeleccionado == RolUsuario.ESTUDIANTE
@@ -217,38 +252,45 @@ fun AuthScreen(
                         .clickable { viewModel.onRolAuthCambiado(RolUsuario.ESTUDIANTE) },
                     shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isEstudiante) VerdeOpaloClaro else BlancoSuperficie
+                        containerColor = if (isEstudiante) colors.secondaryContainer else colors.surface
                     ),
                     border = BorderStroke(
                         width = if (isEstudiante) 2.dp else 1.dp,
-                        color = if (isEstudiante) VerdeOpalo else GrisPlata
+                        color = if (isEstudiante) colors.primary else colors.outlineVariant
                     )
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        RadioButton(
-                            selected = isEstudiante,
-                            onClick = { viewModel.onRolAuthCambiado(RolUsuario.ESTUDIANTE) },
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = VinoTintoOleo
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Person, contentDescription = null, tint = colors.primary)
+                            RadioButton(
+                                selected = isEstudiante,
+                                onClick = { viewModel.onRolAuthCambiado(RolUsuario.ESTUDIANTE) },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = colors.primary,
+                                    unselectedColor = colors.onSurfaceVariant
+                                )
                             )
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        }
                         Column {
                             Text(
                                 text = "Estudiante",
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = NegroTexto
+                                color = colors.onSurface
                             )
                             Text(
                                 text = "Matrículas y pagos",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = GrisTextoSecundario
+                                color = colors.onSurfaceVariant
                             )
                         }
                     }
@@ -262,38 +304,45 @@ fun AuthScreen(
                         .clickable { viewModel.onRolAuthCambiado(RolUsuario.ADMINISTRADOR) },
                     shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isAdmin) CremaFondo else BlancoSuperficie
+                        containerColor = if (isAdmin) colors.secondaryContainer else colors.surface
                     ),
                     border = BorderStroke(
                         width = if (isAdmin) 2.dp else 1.dp,
-                        color = if (isAdmin) VinoTintoOleo else GrisPlata
+                        color = if (isAdmin) colors.primary else colors.outlineVariant
                     )
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        RadioButton(
-                            selected = isAdmin,
-                            onClick = { viewModel.onRolAuthCambiado(RolUsuario.ADMINISTRADOR) },
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = VinoTintoOleo
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.AdminPanelSettings, contentDescription = null, tint = colors.primary)
+                            RadioButton(
+                                selected = isAdmin,
+                                onClick = { viewModel.onRolAuthCambiado(RolUsuario.ADMINISTRADOR) },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = colors.primary,
+                                    unselectedColor = colors.onSurfaceVariant
+                                )
                             )
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        }
                         Column {
                             Text(
                                 text = "Administrador",
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = NegroTexto
+                                color = colors.onSurface
                             )
                             Text(
                                 text = "Gestión institucional",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = GrisTextoSecundario
+                                color = colors.onSurfaceVariant
                             )
                         }
                     }
@@ -306,18 +355,18 @@ fun AuthScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
-                    color = BlancoSuperficie,
-                    border = BorderStroke(1.dp, GrisPlata)
+                    color = colors.surface,
+                    border = BorderStroke(1.dp, colors.outlineVariant)
                 ) {
                     SecondaryTabRow(
                         selectedTabIndex = if (state.modoAuth == ModoAuth.LOGIN) 0 else 1,
-                        containerColor = BlancoSuperficie,
-                        contentColor = VinoTintoOleo,
+                        containerColor = colors.surface,
+                        contentColor = colors.primary,
                         indicator = {
                             TabRowDefaults.SecondaryIndicator(
                                 modifier = Modifier.tabIndicatorOffset(if (state.modoAuth == ModoAuth.LOGIN) 0 else 1),
                                 height = 3.dp,
-                                color = VinoTintoOleo
+                                color = colors.primary
                             )
                         },
                         divider = {}
@@ -325,6 +374,8 @@ fun AuthScreen(
                         Tab(
                             selected = state.modoAuth == ModoAuth.LOGIN,
                             onClick = { viewModel.setModoAuth(ModoAuth.LOGIN) },
+                            selectedContentColor = colors.primary,
+                            unselectedContentColor = colors.onSurfaceVariant,
                             text = {
                                 Text(
                                     text = "Iniciar Sesión",
@@ -342,6 +393,8 @@ fun AuthScreen(
                         Tab(
                             selected = state.modoAuth == ModoAuth.REGISTRO,
                             onClick = { viewModel.setModoAuth(ModoAuth.REGISTRO) },
+                            selectedContentColor = colors.primary,
+                            unselectedContentColor = colors.onSurfaceVariant,
                             text = {
                                 Text(
                                     text = "Registrarse",
@@ -362,8 +415,8 @@ fun AuthScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(22.dp),
-                    colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
-                    border = BorderStroke(1.dp, GrisPlata),
+                    colors = CardDefaults.cardColors(containerColor = colors.surface),
+                    border = BorderStroke(1.dp, colors.outlineVariant),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
@@ -378,7 +431,7 @@ fun AuthScreen(
                                 text = "Ingreso con Código Estudiantil",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = NegroTexto
+                                color = colors.onSurface
                             )
 
                             OutlinedTextField(
@@ -421,13 +474,16 @@ fun AuthScreen(
 
                             Button(
                                 onClick = { viewModel.iniciarSesion() },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(50),
-                                colors = ButtonDefaults.buttonColors(containerColor = VinoTintoOleo)
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colors.primary,
+                                    contentColor = colors.onPrimary
+                                )
                             ) {
                                 Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Iniciar Sesión como Estudiante", fontWeight = FontWeight.Bold)
+                                Text("Iniciar Sesión como Estudiante", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                             }
                         } else {
                             // MODO REGISTRO ESTUDIANTE
@@ -435,7 +491,7 @@ fun AuthScreen(
                                 text = "Registro de Nuevo Estudiante UTS",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = NegroTexto
+                                color = colors.onSurface
                             )
 
                             OutlinedTextField(
@@ -472,8 +528,8 @@ fun AuthScreen(
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(14.dp),
-                                colors = CardDefaults.cardColors(containerColor = CremaFondo),
-                                border = BorderStroke(1.dp, GrisPlata)
+                                colors = CardDefaults.cardColors(containerColor = colors.background),
+                                border = BorderStroke(1.dp, colors.outlineVariant)
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -484,23 +540,26 @@ fun AuthScreen(
                                     Icon(
                                         imageVector = Icons.Default.Lock,
                                         contentDescription = null,
-                                        tint = VinoTintoOleo,
+                                        tint = colors.primary,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Text(
                                         text = "Tu contraseña inicial será automáticamente tu código de estudiante. Al iniciar sesión por primera vez, deberás cambiarla por una diferente.",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = NegroTexto
+                                        color = colors.onSurfaceVariant
                                     )
                                 }
                             }
 
                             Button(
                                 onClick = { viewModel.guardarPerfil() },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(50),
-                                colors = ButtonDefaults.buttonColors(containerColor = VinoTintoOleo)
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colors.primary,
+                                    contentColor = colors.onPrimary
+                                )
                             ) {
                                 Icon(Icons.Default.PersonAdd, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -514,8 +573,8 @@ fun AuthScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(22.dp),
-                    colors = CardDefaults.cardColors(containerColor = BlancoSuperficie),
-                    border = BorderStroke(1.5.dp, VinoTintoOleo),
+                    colors = CardDefaults.cardColors(containerColor = colors.surface),
+                    border = BorderStroke(1.dp, colors.outlineVariant),
                     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
                     Column(
@@ -527,35 +586,35 @@ fun AuthScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Surface(
                                 shape = CircleShape,
-                                color = VinoTintoOleo,
+                                color = colors.primaryContainer,
                                 modifier = Modifier.size(36.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = Icons.Default.AdminPanelSettings,
                                         contentDescription = null,
-                                        tint = VerdeOpalo,
+                                        tint = colors.onPrimaryContainer,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
                             Spacer(modifier = Modifier.width(10.dp))
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "Acceso Administrativo UTS",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = NegroTexto
+                                    color = colors.onSurface
                                 )
                                 Text(
                                     text = "Dirección Académica y Financiera",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = GrisTextoSecundario
+                                    color = colors.onSurfaceVariant
                                 )
                             }
                         }
 
-                        HorizontalDivider(color = GrisPlata)
+                        HorizontalDivider(color = colors.outlineVariant)
 
                         OutlinedTextField(
                             value = state.campoCodigo,
@@ -596,13 +655,16 @@ fun AuthScreen(
 
                         Button(
                             onClick = { viewModel.iniciarSesion("ADMIN") },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(50),
-                            colors = ButtonDefaults.buttonColors(containerColor = VinoTintoOleo)
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.primary,
+                                contentColor = colors.onPrimary
+                            )
                         ) {
-                            Icon(Icons.Default.AdminPanelSettings, contentDescription = null, tint = VerdeOpalo)
+                            Icon(Icons.Default.AdminPanelSettings, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Ingresar al Panel de Administrador", fontWeight = FontWeight.Bold)
+                            Text("Ingresar al Panel de Administrador", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                         }
 
                         OutlinedButton(
@@ -611,11 +673,12 @@ fun AuthScreen(
                                 viewModel.onPasswordCambiado("admin")
                                 viewModel.iniciarSesion("ADMIN", "admin")
                             },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(50),
-                            border = BorderStroke(1.dp, VerdeOpalo)
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            border = BorderStroke(1.dp, colors.primary),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.primary)
                         ) {
-                            Text("Acceso Rápido Demo Administrador", color = VinoTintoOleo, fontWeight = FontWeight.Bold)
+                            Text("Acceso Rápido Demo Administrador", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                         }
                     }
                 }

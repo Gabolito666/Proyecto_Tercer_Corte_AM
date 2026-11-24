@@ -107,7 +107,7 @@ fun HistorialScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = VinoTintoOleo),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(
@@ -178,7 +178,7 @@ fun HistorialScreen(
                             text = "Total Acumulado Financiero",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = BlancoSuperficie
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         Text(
                             text = if (state.esAdmin) {
@@ -189,7 +189,7 @@ fun HistorialScreen(
                                 } ?: "Sin sesión activa"
                             },
                             style = MaterialTheme.typography.bodySmall,
-                            color = BlancoSuperficie.copy(alpha = 0.8f)
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
                         )
                     }
 
@@ -204,7 +204,7 @@ fun HistorialScreen(
                     Text(
                         text = if (state.esAdmin) "Total institucional consolidado en el sistema" else "Liquidaciones registradas para el estudiante actual",
                         style = MaterialTheme.typography.bodySmall,
-                        color = BlancoSuperficie.copy(alpha = 0.75f)
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
                     )
                 }
             }
@@ -458,7 +458,7 @@ private fun LiquidacionItemCard(
                             Icon(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = null,
-                                tint = BlancoSuperficie,
+                                tint = MaterialTheme.colorScheme.onError,
                                 modifier = Modifier.size(12.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
@@ -466,7 +466,7 @@ private fun LiquidacionItemCard(
                                 text = "Icetex: +5%",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = BlancoSuperficie
+                                color = MaterialTheme.colorScheme.onError
                             )
                         }
                     }

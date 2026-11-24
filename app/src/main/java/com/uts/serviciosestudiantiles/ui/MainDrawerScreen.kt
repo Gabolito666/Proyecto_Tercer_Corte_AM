@@ -136,7 +136,7 @@ fun MainDrawerScreen(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = if (state.esAdmin) VinoTintoOleo else VerdeOpaloClaro,
+                            color = VerdeOpaloClaro,
                             modifier = Modifier.size(50.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -166,7 +166,7 @@ fun MainDrawerScreen(
                                     text = if (state.esAdmin) "ADMINISTRADOR" else "ESTUDIANTE",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (state.esAdmin) BlancoSuperficie else NegroTexto,
+                                    color = if (state.esAdmin) MaterialTheme.colorScheme.onPrimary else NegroTexto,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                 )
                             }
@@ -360,7 +360,7 @@ fun MainDrawerScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Surface(
                                 shape = CircleShape,
-                                color = VinoTintoOleo,
+                                color = MaterialTheme.colorScheme.primaryContainer,
                                 modifier = Modifier.size(34.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {

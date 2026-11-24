@@ -256,7 +256,7 @@ fun MatriculaScreen(
                                         onCheckedChange = { viewModel.toggleCursoSeleccionado(curso) },
                                         colors = CheckboxDefaults.colors(
                                             checkedColor = VerdeOpalo,
-                                            checkmarkColor = NegroTexto
+                                            checkmarkColor = MaterialTheme.colorScheme.onTertiary
                                         )
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
@@ -357,7 +357,7 @@ fun MatriculaScreen(
                                         onCheckedChange = { viewModel.onBecaCambiada(it) },
                                         colors = CheckboxDefaults.colors(
                                             checkedColor = VerdeOpalo,
-                                            checkmarkColor = NegroTexto
+                                            checkmarkColor = MaterialTheme.colorScheme.onTertiary
                                         )
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
@@ -383,7 +383,7 @@ fun MatriculaScreen(
                                             text = "-$becaPorcentajeInt%",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
-                                            color = if (state.tieneBeca) NegroTexto else VerdeOpalo,
+                                            color = if (state.tieneBeca) MaterialTheme.colorScheme.onTertiary else VerdeOpalo,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                         )
                                     }
@@ -424,7 +424,7 @@ fun MatriculaScreen(
                                             },
                                             colors = CheckboxDefaults.colors(
                                                 checkedColor = VerdeOpalo,
-                                                checkmarkColor = NegroTexto
+                                                checkmarkColor = MaterialTheme.colorScheme.onTertiary
                                             )
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
@@ -453,7 +453,7 @@ fun MatriculaScreen(
                                                 text = "-$pctDesc%",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.ExtraBold,
-                                                color = if (estaSeleccionada) NegroTexto else VinoTintoOleo,
+                                                color = if (estaSeleccionada) MaterialTheme.colorScheme.onTertiary else VinoTintoOleo,
                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                             )
                                         }
@@ -507,7 +507,7 @@ fun MatriculaScreen(
                                         text = "+$icetexPorcentajeInt%",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (state.tieneIcetex) BlancoSuperficie else MagentaOleo,
+                                        color = if (state.tieneIcetex) MaterialTheme.colorScheme.onError else MagentaOleo,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                     )
                                 }
@@ -677,7 +677,7 @@ fun MatriculaScreen(
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = VinoTintoOleo,
-                    contentColor = BlancoSuperficie,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     disabledContainerColor = GrisPlataMate,
                     disabledContentColor = GrisTextoSecundario
                 ),

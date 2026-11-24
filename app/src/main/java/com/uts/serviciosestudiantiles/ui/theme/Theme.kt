@@ -1,11 +1,9 @@
 package com.uts.serviciosestudiantiles.ui.theme
 
 import android.app.Activity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalView
@@ -21,42 +19,21 @@ val UTSShapes = Shapes(
     extraLarge = RoundedCornerShape(24.dp)
 )
 
-private val UTSLightColorScheme = lightColorScheme(
-    primary = VinoTintoOleo,
-    onPrimary = BlancoSuperficie,
-    primaryContainer = VinoTintoOscuro,
-    onPrimaryContainer = BlancoSuperficie,
-    secondary = MagentaOleo,
-    onSecondary = BlancoSuperficie,
-    secondaryContainer = MagentaOleoClaro,
-    onSecondaryContainer = MagentaOleo,
-    tertiary = VerdeOpalo,
-    onTertiary = NegroTexto,
-    tertiaryContainer = VerdeOpaloClaro,
-    onTertiaryContainer = NegroTexto,
-    background = CremaFondo,
-    onBackground = NegroTexto,
-    surface = BlancoSuperficie,
-    onSurface = NegroTexto,
-    surfaceVariant = BlancoSuperficie,
-    onSurfaceVariant = GrisTextoSecundario,
-    outline = GrisPlata,
-    outlineVariant = GrisPlata
-)
-
 @Composable
 fun UTSTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = UTSLightColorScheme
+    val colorScheme = if (darkTheme) UTSDarkColors else UTSLightColors
     val view = LocalView.current
 
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as? Activity)?.window
             if (window != null) {
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+                val controller = WindowCompat.getInsetsController(window, view)
+                controller.isAppearanceLightStatusBars = !darkTheme
+                controller.isAppearanceLightNavigationBars = !darkTheme
             }
         }
     }
