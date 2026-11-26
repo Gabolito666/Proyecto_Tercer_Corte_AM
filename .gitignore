@@ -15,5 +15,6 @@
 local.properties
 
 .agents/
+.agent/
 .hermes/
 skills-lock.json
